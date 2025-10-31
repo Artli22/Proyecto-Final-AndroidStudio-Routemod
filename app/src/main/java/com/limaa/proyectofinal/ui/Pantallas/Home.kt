@@ -1,0 +1,284 @@
+package com.limaa.proyectofinal.ui.Pantallas
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+// Creado por Arturo Lima
+
+@Composable
+fun RouteModScreen(
+    onVerMasInventario: () -> Unit = {},
+    onVerMasRuta: () -> Unit = {},
+    onPerfilClick: () -> Unit = {},
+    onCerrarSesion: () -> Unit = {}
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF0F5FA))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color(0xFFFF7622),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "ROUTEMOD",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                IconButton(
+                    onClick = onPerfilClick,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = Color(0xFFFFC6AE),
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Perfil",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(88.dp))
+
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Inventario",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(Color(0xFF121223))
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Producto A",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        text = "Cantidad X",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Producto B",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        text = "Cantidad X",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onVerMasInventario,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .height(36.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF7622)
+                    ),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Text(
+                        text = "VER MAS",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(Color(0xFF121223))
+                )
+            }
+
+            Spacer(modifier = Modifier.height(88.dp))
+
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Ruta Diaria",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(Color(0xFF121223))
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Los Manantiales",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        text = "7ma Calle 5-26",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Montevista Club",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        text = "Casa 113",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Gray
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onVerMasRuta,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .height(36.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF7622)
+                    ),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Text(
+                        text = "VER MAS",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(Color(0xFF121223))
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = onCerrarSesion,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(horizontal = 32.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF7622)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "CERRAR SESIÓN",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun RouteModScreenPreview() {
+    RouteModScreen()
+}
