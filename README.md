@@ -88,3 +88,6 @@ Utilidades de UI
 
 Material Icons: Conjunto de iconos utilizados en toda la aplicación (ArrowBack, Person, LocationOn, Edit, Visibility, etc.)
 
+Importante!!!
+El APK y la explicacion del funcionamiento de la API se encuentran en la rama MaterialApollo dentro del folder llamado MaterialApollo, no se pudo dejar sola a esta carpeta porque se creo la rama directamente del origen y usar el comando cache en una rama huerfana podria comprometer la integridad del proyecto. Nuevamente el APK y explicacion de API estan en la ramma MaterialApollo dentro del folder MaterialApollo. 
+
