@@ -1,5 +1,6 @@
 package com.limaa.proyectofinal.ui.Pantallas
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,13 +10,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.limaa.proyectofinal.LoginViewModel
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.livedata.observeAsState
 
-// Creado por: Jorge Villeda
 object LoginColors {
     val Orange = Color(0xFFFF7A3D)
     val DarkBackground = Color(0xFF1A1A2E)
@@ -23,16 +28,60 @@ object LoginColors {
     val TextFieldBackground = Color(0xFFF5F5F5)
 }
 
-@Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginClick: (email: String, password: String) -> Unit = { _, _ -> },
+    onLoginSuccess: (String) -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
-    onRegisterClick: () -> Unit = {}
+    onRegisterClick: () -> Unit = {},
+    loginViewModel: LoginViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val loginState by loginViewModel.loginState.observeAsState()
+
+    LaunchedEffect(loginState) {
+        loginState?.let { result ->
+            isLoading = false
+            result.onSuccess { response ->
+                // Primero verificar si hay error del servidor
+                if (response.error != null) {
+                    Toast.makeText(
+                        context,
+                        response.error,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else if (response.ok == true) {
+                    // Login exitoso
+                    Toast.makeText(
+                        context,
+                        response.mensaje ?: "Login correcto",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    onLoginSuccess(response.token ?: "")
+                } else {
+                    // Caso inesperado
+                    Toast.makeText(
+                        context,
+                        "Error desconocido",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }.onFailure { error ->
+                Toast.makeText(
+                    context,
+                    error.message ?: "Error en login",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -87,7 +136,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            "EMAIL",
+            "USUARIO",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
@@ -102,7 +151,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
                 Text(
-                    "ejemplo@gmail.com",
+                    "Ejemplo: adm12",
                     color = LoginColors.LightGray,
                     fontSize = 14.sp
                 )
@@ -115,7 +164,7 @@ fun LoginScreen(
             ),
             shape = RoundedCornerShape(8.dp),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -159,9 +208,7 @@ fun LoginScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = rememberMe,
                     onCheckedChange = { rememberMe = it },
@@ -189,20 +236,34 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { onLoginClick(email, password) },
+            onClick = {
+                coroutineScope.launch {
+                    isLoading = true
+                    loginViewModel.login(email.trim(), password.trim())
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = LoginColors.Orange
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isLoading
         ) {
-            Text(
-                "INICIAR SESIÓN",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 3.dp
+                )
+            } else {
+                Text(
+                    "INICIAR SESIÓN",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -213,7 +274,7 @@ fun LoginScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "No tienes una cuenta?",
+                "¿No tienes una cuenta?",
                 fontSize = 12.sp,
                 color = LoginColors.LightGray
             )
@@ -235,13 +296,6 @@ fun LoginScreen(
 @Composable
 fun PreviewLoginScreen() {
     MaterialTheme {
-        LoginScreen(
-            onLoginClick = { email, password ->
-            },
-            onForgotPasswordClick = {
-            },
-            onRegisterClick = {
-            }
-        )
+        LoginScreen()
     }
 }

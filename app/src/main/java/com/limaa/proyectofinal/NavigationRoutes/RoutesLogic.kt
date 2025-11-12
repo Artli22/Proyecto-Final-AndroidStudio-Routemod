@@ -39,7 +39,7 @@ fun AppNavigation(
 
         composable<Login> {
             LoginScreen(
-                onLoginClick = { _, _ ->
+                onLoginSuccess = { token ->
                     navController.navigate(LocationAccess)
                 },
                 onForgotPasswordClick = {

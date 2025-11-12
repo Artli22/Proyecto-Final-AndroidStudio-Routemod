@@ -60,4 +60,19 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.5")
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+
+    // --- Retrofit (para conectarse al API REST) ---
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+// --- Corrutinas (para ejecutar llamadas en segundo plano sin bloquear la UI) ---
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+// --- Lifecycle ViewModel + LiveData (para manejar el estado del login) ---
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
+
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
+
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
