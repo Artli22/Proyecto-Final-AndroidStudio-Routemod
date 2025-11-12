@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.limaa.proyectofinal.LoginViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.livedata.observeAsState
+import com.limaa.proyectofinal.TokenManager
 
 object LoginColors {
     val Orange = Color(0xFFFF7A3D)
@@ -50,7 +51,6 @@ fun LoginScreen(
         loginState?.let { result ->
             isLoading = false
             result.onSuccess { response ->
-                // Primero verificar si hay error del servidor
                 if (response.error != null) {
                     Toast.makeText(
                         context,
@@ -58,15 +58,21 @@ fun LoginScreen(
                         Toast.LENGTH_SHORT
                     ).show()
                 } else if (response.ok == true) {
-                    // Login exitoso
+                    // GUARDAR TOKEN Y USUARIO
+                    TokenManager.saveToken(
+                        context,
+                        response.token ?: "",
+                        response.usuario ?: ""
+                    )
+
                     Toast.makeText(
                         context,
                         response.mensaje ?: "Login correcto",
                         Toast.LENGTH_SHORT
                     ).show()
+
                     onLoginSuccess(response.token ?: "")
                 } else {
-                    // Caso inesperado
                     Toast.makeText(
                         context,
                         "Error desconocido",
