@@ -9,23 +9,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.limaa.proyectofinal.Pedido
+import com.limaa.proyectofinal.RutaViewModel
 
 // Creado por: Ivan Morataya
-data class Paradas(
-    val nombre: String,
-    val lugar: String,
-    val direccion: String,
-    val tiempo: String,
-    val codigo: String,
-    val llegada: Boolean = false
-)
 
 object Colores {
     val Naranja = Color(0xFFFF7A3D)
@@ -36,35 +32,15 @@ object Colores {
 @Composable
 fun RoutaPantalla(
     onNavigateBack: () -> Unit = {},
-    onViewOrder: (Paradas) -> Unit = {}
+    onViewOrder: (Pedido) -> Unit = {},
+    viewModel: RutaViewModel = viewModel()
 ) {
-    val stops = remember {
-        listOf(
-            Paradas(
-                nombre = "Carlos Méndez",
-                lugar = "Zona 10",
-                direccion = "15 Avenida 12-34",
-                tiempo = "09:00AM",
-                codigo = "Código 1308",
-                llegada = true
-            ),
-            Paradas(
-                nombre = "Rita Gonzáles",
-                lugar = "Los Manantiales",
-                direccion = "7ma Calle 5-26",
-                tiempo = "10:30AM",
-                codigo = "Código 1411",
-                llegada = true
-            ),
-            Paradas(
-                nombre = "María López",
-                lugar = "San Cristóbal",
-                direccion = "3ra Calle 8-15",
-                tiempo = "11:45AM",
-                codigo = "Código 1523",
-                llegada = false
-            )
-        )
+    val context = LocalContext.current
+    val rutaState by viewModel.rutaState.observeAsState()
+    val isLoading by viewModel.isLoading.observeAsState(false)
+
+    LaunchedEffect(Unit) {
+        viewModel.obtenerRutaDelDia(context)
     }
 
     Scaffold(
@@ -72,16 +48,18 @@ fun RoutaPantalla(
             TopAppBar(
                 title = {
                     Text(
-                        "Ruta del día",
-                        color = Color.LightGray,
-                        fontSize = 14.sp
+                        "Mis Rutas",
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = "Volver",
+                            tint = Color.Black
                         )
                     }
                 },
@@ -97,25 +75,157 @@ fun RoutaPantalla(
                 .padding(padding)
                 .background(Color.White)
         ) {
-            Text(
-                "20/09",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                color = Colores.Naranja,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = Colores.Naranja
+                            )
+                            Text(
+                                "Cargando rutas...",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(stops) { stop ->
-                    DeliveryStopCard(
-                        stop = stop,
-                        onMarkArrival = {  },
-                        onViewOrder = { onViewOrder(stop) }
-                    )
+                rutaState?.isFailure == true -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Text(
+                                "Error al cargar las rutas",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                rutaState?.exceptionOrNull()?.message ?: "Error desconocido",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                            Button(
+                                onClick = { viewModel.obtenerRutaDelDia(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Colores.Naranja
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Reintentar")
+                            }
+                        }
+                    }
+                }
+
+                rutaState?.getOrNull()?.pedidos.isNullOrEmpty() -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Text(
+                                "No hay rutas disponibles",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                "Aún no tienes pedidos asignados",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                            Button(
+                                onClick = { viewModel.obtenerRutaDelDia(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Colores.Naranja
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("Actualizar")
+                            }
+                        }
+                    }
+                }
+
+                else -> {
+                    val pedidos = rutaState?.getOrNull()?.pedidos ?: emptyList()
+
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Colores.Naranja2
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "Rutas de hoy",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Colores.Naranja
+                                    )
+                                    Text(
+                                        "${pedidos.size} ${if (pedidos.size == 1) "pedido" else "pedidos"}",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(pedidos) { pedido ->
+                                DeliveryStopCard(
+                                    pedido = pedido,
+                                    onMarkArrival = {
+                                    },
+                                    onViewOrder = { onViewOrder(pedido) }
+                                )
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -124,16 +234,29 @@ fun RoutaPantalla(
 
 @Composable
 fun DeliveryStopCard(
-    stop: Paradas,
+    pedido: Pedido,
     onMarkArrival: () -> Unit = {},
     onViewOrder: () -> Unit = {}
 ) {
+    val estadoColor = try {
+        if (pedido.color != null && pedido.color.startsWith("#")) {
+            Color(android.graphics.Color.parseColor(pedido.color))
+        } else {
+            Color.LightGray
+        }
+    } catch (e: Exception) {
+        Color.LightGray
+    }
+
+    val yaEntregado = pedido.estado?.contains("Recoger", ignoreCase = true) == true
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -141,9 +264,10 @@ fun DeliveryStopCard(
                 .padding(16.dp)
         ) {
             Text(
-                stop.nombre,
-                fontSize = 14.sp,
-                color = Color.Gray,
+                pedido.cliente ?: "Cliente desconocido",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
@@ -152,34 +276,144 @@ fun DeliveryStopCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Column {
+                    pedido.condominio?.let { condominio ->
+                        if (condominio.isNotBlank()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Ubicación:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    condominio,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.Black
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            stop.lugar,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            stop.codigo,
-                            fontSize = 14.sp,
+                            "Pedido:",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
                             color = Color.Gray
                         )
                         Text(
-                            stop.direccion,
+                            pedido.id ?: "N/A",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
                     }
+
+                    pedido.direccion?.let { direccion ->
+                        if (direccion.isNotBlank()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    "Dirección:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    direccion,
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
+                    pedido.informacionAcceso?.let { info ->
+                        if (info.isNotBlank()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Text(
+                                    "Acceso:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    info,
+                                    fontSize = 13.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
+                    pedido.telefono?.let { tel ->
+                        if (tel.isNotBlank()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Tel:",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    tel,
+                                    fontSize = 14.sp,
+                                    color = Colores.Naranja,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
 
-                Text(
-                    stop.tiempo,
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    pedido.horaEntrega?.let { hora ->
+                        Text(
+                            hora.substring(0, 5),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Colores.Naranja
+                        )
+                    }
+
+                    pedido.estado?.let { estado ->
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = estadoColor.copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                estado,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = estadoColor,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             Row(
@@ -191,41 +425,32 @@ fun DeliveryStopCard(
                 Button(
                     onClick = onMarkArrival,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (stop.llegada) Colores.Naranja else Color.LightGray
+                        containerColor = if (yaEntregado) Colores.Naranja else Color.LightGray
                     ),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        "Marcar Llegada/Salida",
+                        if (yaEntregado) "Marcar Recoger" else "Marcar Entrega",
                         fontSize = 12.sp
                     )
                 }
 
                 OutlinedButton(
                     onClick = onViewOrder,
-                    modifier = Modifier.weight(0.6f),
+                    modifier = Modifier.weight(0.7f),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Colores.Naranja
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        Colores.Naranja
                     )
                 ) {
-                    Text("Ver pedido", fontSize = 12.sp)
+                    Text("Ver detalles", fontSize = 12.sp)
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true, name = "Ruta del Día Screen")
-@Composable
-fun PreviewRoutaPantalla() {
-    MaterialTheme {
-        RoutaPantalla(
-            onNavigateBack = {
-            },
-            onViewOrder = { parada ->
-            }
-        )
     }
 }

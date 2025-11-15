@@ -18,7 +18,7 @@ import com.limaa.proyectofinal.ui.Pantallas.PantallaInventarioVehiculo
 import com.limaa.proyectofinal.ui.Pantallas.RegistrarseScreen
 import com.limaa.proyectofinal.ui.Pantallas.RouteModScreen
 import com.limaa.proyectofinal.ui.Pantallas.RoutaPantalla
-import com.limaa.proyectofinal.ui.pantallas.PantallaDelivery
+import com.limaa.proyectofinal.ui.Pantallas.PantallaDelivery
 
 @Composable
 fun AppNavigation(
@@ -127,6 +127,7 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onViewOrder = { _ ->
+
                 }
             )
         }

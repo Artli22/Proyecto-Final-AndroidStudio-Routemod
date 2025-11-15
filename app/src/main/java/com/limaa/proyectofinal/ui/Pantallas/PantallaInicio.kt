@@ -1,4 +1,4 @@
-package com.limaa.proyectofinal.ui.pantallas
+package com.limaa.proyectofinal.ui.Pantallas
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image

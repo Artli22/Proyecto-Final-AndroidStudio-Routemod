@@ -12,7 +12,7 @@ import java.io.IOException
 
 class RutaViewModel : ViewModel() {
 
-    private val _rutaState = MutableLiveData<Result<RutaResponse>?>()  // ← Ahora es nullable
+    private val _rutaState = MutableLiveData<Result<RutaResponse>?>()
     val rutaState: LiveData<Result<RutaResponse>?> = _rutaState
 
     private val _isLoading = MutableLiveData<Boolean>(false)
@@ -26,7 +26,6 @@ class RutaViewModel : ViewModel() {
                 _isLoading.value = true
                 Log.d("RutaViewModel", "=== INICIO OBTENER RUTA ===")
 
-                // Obtener el token guardado
                 val token = TokenManager.getToken(context)
 
                 if (token == null) {
@@ -56,7 +55,6 @@ class RutaViewModel : ViewModel() {
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
 
-                    // ========== LOGS TEMPORALES PARA DEBUG ==========
                     Log.d("RutaViewModel", "==========================================")
                     Log.d("RutaViewModel", "RESPUESTA COMPLETA DE LA RUTA:")
                     Log.d("RutaViewModel", "==========================================")
@@ -64,35 +62,30 @@ class RutaViewModel : ViewModel() {
                     Log.d("RutaViewModel", "OK: ${body.ok}")
                     Log.d("RutaViewModel", "Mensaje: ${body.mensaje}")
                     Log.d("RutaViewModel", "Error: ${body.error}")
-                    Log.d("RutaViewModel", "Ruta: ${body.ruta}")
+                    Log.d("RutaViewModel", "Cantidad pedidos: ${body.pedidos?.size ?: 0}")
 
-                    if (body.ruta != null) {
-                        Log.d("RutaViewModel", "--- DETALLES DE LA RUTA ---")
-                        Log.d("RutaViewModel", "ID Ruta: ${body.ruta.id}")
-                        Log.d("RutaViewModel", "Fecha: ${body.ruta.fecha}")
-                        Log.d("RutaViewModel", "Conductor: ${body.ruta.conductor}")
-                        Log.d("RutaViewModel", "Vehículo: ${body.ruta.vehiculo}")
-                        Log.d("RutaViewModel", "Cantidad pedidos: ${body.ruta.pedidos?.size ?: 0}")
-
-                        body.ruta.pedidos?.forEachIndexed { index, pedido ->
-                            Log.d("RutaViewModel", "  Pedido #${index + 1}:")
-                            Log.d("RutaViewModel", "    ID: ${pedido.id}")
-                            Log.d("RutaViewModel", "    Cliente: ${pedido.cliente}")
-                            Log.d("RutaViewModel", "    Dirección: ${pedido.direccion}")
-                            Log.d("RutaViewModel", "    Estado: ${pedido.estado}")
-                        }
-                    } else {
-                        Log.d("RutaViewModel", "Ruta es NULL - respuesta vacía del servidor")
+                    body.pedidos?.forEachIndexed { index, pedido ->
+                        Log.d("RutaViewModel", "  Pedido #${index + 1}:")
+                        Log.d("RutaViewModel", "    ID: ${pedido.id}")
+                        Log.d("RutaViewModel", "    Cliente: ${pedido.cliente}")
+                        Log.d("RutaViewModel", "    Condominio: ${pedido.condominio}")
+                        Log.d("RutaViewModel", "    Dirección: ${pedido.direccion}")
+                        Log.d("RutaViewModel", "    Teléfono: ${pedido.telefono}")
+                        Log.d("RutaViewModel", "    Hora Entrega: ${pedido.horaEntrega}")
+                        Log.d("RutaViewModel", "    Estado: ${pedido.estado}")
                     }
-                    Log.d("RutaViewModel", "==========================================")
-                    // ========== FIN LOGS TEMPORALES ==========
 
-                    // Verificar si hay error del servidor
+                    if (body.pedidos.isNullOrEmpty()) {
+                        Log.w("RutaViewModel", "La lista de pedidos está vacía")
+                    }
+
+                    Log.d("RutaViewModel", "==========================================")
+
                     if (body.error != null) {
                         Log.e("RutaViewModel", "Error del servidor: ${body.error}")
                         _rutaState.value = Result.failure(Exception(body.error))
                     } else {
-                        Log.d("RutaViewModel", "Ruta obtenida exitosamente")
+                        Log.d("RutaViewModel", "Pedidos obtenidos exitosamente")
                         _rutaState.value = Result.success(body)
                     }
                 } else {
@@ -109,14 +102,17 @@ class RutaViewModel : ViewModel() {
                 _rutaState.value = Result.failure(Exception("Error HTTP"))
             } catch (e: Exception) {
                 Log.e("RutaViewModel", "Error inesperado: ${e.message}", e)
+                e.printStackTrace()
                 _rutaState.value = Result.failure(Exception("Error inesperado: ${e.message}"))
             } finally {
                 _isLoading.value = false
+                Log.d("RutaViewModel", "=== FIN OBTENER RUTA ===")
             }
         }
     }
 
     fun limpiarEstado() {
-        _rutaState.value = null  // Ahora sí puede ser null
+        _rutaState.value = null
+        Log.d("RutaViewModel", "Estado limpiado")
     }
 }

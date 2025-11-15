@@ -6,14 +6,14 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 data class LoginRequest(
-    val accion: String = "login",  //
+    val accion: String = "login",
     val usuario: String,
     val password: String
 )
 
 data class RutaRequest(
     val accion: String = "ruta",
-    val token: String  // El token se enviará en el body también
+    val token: String
 )
 
 interface ApiService {
