@@ -3,10 +3,13 @@ package com.limaa.proyectofinal.NavigationRoutes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.limaa.proyectofinal.Utils.hasLocationPermission
 import com.limaa.proyectofinal.ui.Pantallas.EditProfileScreen
 import com.limaa.proyectofinal.ui.Pantallas.ForgotPasswordScreen
 import com.limaa.proyectofinal.ui.Pantallas.LocationAccessScreen
@@ -134,6 +137,29 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onSaveClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable<LocationAccess> {
+            val context = LocalContext.current
+
+            // Verifica si YA tiene permiso → salta la pantalla
+            LaunchedEffect(Unit) {
+                if (context.hasLocationPermission()) {
+                    navController.navigate(Home) {
+                        popUpTo(LocationAccess) { inclusive = true }
+                    }
+                }
+            }
+
+            LocationAccessScreen(
+                onPermissionGranted = {
+                    navController.navigate(Home) {
+                        popUpTo(Login) { inclusive = false }
+                    }
+                },
+                onBackClick = {
                     navController.popBackStack()
                 }
             )

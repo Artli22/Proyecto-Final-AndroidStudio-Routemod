@@ -1,5 +1,6 @@
 package com.limaa.proyectofinal.ui.Pantallas
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -22,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.limaa.proyectofinal.R
+import com.limaa.proyectofinal.Utils.rememberLocationPermissionLauncher
 
 // Creado por: Arturo Lima
 object UbicacionColors {
@@ -33,8 +36,15 @@ object UbicacionColors {
 @Composable
 fun LocationAccessScreen(
     onAccederUbicacion: () -> Unit = {},
-    onBackClick: () -> Unit = {}
-) {
+    onBackClick: () -> Unit = {} ,
+    onPermissionGranted: () -> Unit= {}
+) {    val context = LocalContext.current
+    val requestPermission = rememberLocationPermissionLauncher(
+        onGranted = onPermissionGranted,
+        onDenied = {
+            Toast.makeText(context, "Permiso necesario para continuar", Toast.LENGTH_LONG).show()
+        })
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +90,7 @@ fun LocationAccessScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
-                onClick = onAccederUbicacion,
+                onClick = requestPermission, // ← AQUÍ SE SOLICITA
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
