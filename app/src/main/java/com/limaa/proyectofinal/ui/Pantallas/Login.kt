@@ -21,6 +21,8 @@ import com.limaa.proyectofinal.LoginViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.livedata.observeAsState
 import com.limaa.proyectofinal.TokenManager
+import android.util.Log
+import com.limaa.proyectofinal.RutaViewModel
 
 object LoginColors {
     val Orange = Color(0xFFFF7A3D)
@@ -70,6 +72,14 @@ fun LoginScreen(
                         response.mensaje ?: "Login correcto",
                         Toast.LENGTH_SHORT
                     ).show()
+
+                    // ========== PRUEBA TEMPORAL: Llamar a obtener ruta ==========
+                    Log.d("LoginScreen", "Iniciando prueba de obtener ruta...")
+                    val rutaViewModel = RutaViewModel()
+                    rutaViewModel.obtenerRutaDelDia(context)
+                    Log.d("LoginScreen", "Llamada a obtenerRutaDelDia ejecutada")
+                    // ============================================================
+
 
                     onLoginSuccess(response.token ?: "")
                 } else {
