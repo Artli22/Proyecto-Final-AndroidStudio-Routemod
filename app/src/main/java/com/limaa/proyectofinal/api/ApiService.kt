@@ -16,6 +16,12 @@ data class RutaRequest(
     val token: String
 )
 
+data class PedidoDetalleRequest(
+    val accion: String = "pedido",
+    val token: String,
+    val pedido: String)
+
+
 interface ApiService {
     @Headers("Content-Type: application/json")
     @POST("apilot.php")
@@ -23,4 +29,8 @@ interface ApiService {
 
     @POST("apilot.php")
     suspend fun obtenerRuta(@Body request: RutaRequest): Response<RutaResponse>
+
+    @POST("apilot.php")
+    suspend fun obtenerDetallePedido(@Body request: PedidoDetalleRequest): Response<PedidoDetalleResponse>
+
 }

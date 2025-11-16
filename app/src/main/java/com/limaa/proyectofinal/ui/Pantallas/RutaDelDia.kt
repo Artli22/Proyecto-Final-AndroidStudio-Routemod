@@ -20,6 +20,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.limaa.proyectofinal.Pedido
 import com.limaa.proyectofinal.RutaViewModel
+import androidx.compose.material.icons.filled.LocationOn
+import android.content.Intent
+import android.net.Uri
+import android.content.Context
+import androidx.compose.material.icons.filled.CameraAlt
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 // Creado por: Ivan Morataya
 
@@ -32,7 +40,7 @@ object Colores {
 @Composable
 fun RoutaPantalla(
     onNavigateBack: () -> Unit = {},
-    onViewOrder: (Pedido) -> Unit = {},
+    onViewOrder: (String) -> Unit = {},
     viewModel: RutaViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -215,9 +223,30 @@ fun RoutaPantalla(
                             items(pedidos) { pedido ->
                                 DeliveryStopCard(
                                     pedido = pedido,
-                                    onMarkArrival = {
-                                    },
-                                    onViewOrder = { onViewOrder(pedido) }
+                                    onViewOrder = { onViewOrder(pedido.id ?: "") },
+                                    onOpenMaps = {
+                                        // Abrir Google Maps con las coordenadas
+                                        pedido.coordenadas?.let { coords ->
+                                            if (coords.isNotBlank() && coords != "null") {
+                                                val intent = Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    Uri.parse("geo:0,0?q=$coords(${pedido.cliente ?: "Ubicación"})")
+                                                )
+                                                intent.setPackage("com.google.android.apps.maps")
+
+                                                try {
+                                                    context.startActivity(intent)
+                                                } catch (e: Exception) {
+                                                    // Si Google Maps no está instalado, usar el navegador
+                                                    val webIntent = Intent(
+                                                        Intent.ACTION_VIEW,
+                                                        Uri.parse("https://www.google.com/maps/search/?api=1&query=$coords")
+                                                    )
+                                                    context.startActivity(webIntent)
+                                                }
+                                            }
+                                        }
+                                    }
                                 )
                             }
 
@@ -232,12 +261,28 @@ fun RoutaPantalla(
     }
 }
 
+
 @Composable
 fun DeliveryStopCard(
     pedido: Pedido,
-    onMarkArrival: () -> Unit = {},
-    onViewOrder: () -> Unit = {}
+    onViewOrder: () -> Unit = {},
+    onOpenMaps: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val sharedPrefs = context.getSharedPreferences("pedidos_estado", Context.MODE_PRIVATE)
+
+    // Estado del pedido: 0 = No iniciado, 1 = Llegada marcada, 2 = Salida marcada (Finalizado)
+    val estadoPedido = remember { mutableStateOf(sharedPrefs.getInt(pedido.id ?: "", 0)) }
+
+    // Launcher para la cámara
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            Toast.makeText(context, "✓ Comprobación completada", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val estadoColor = try {
         if (pedido.color != null && pedido.color.startsWith("#")) {
             Color(android.graphics.Color.parseColor(pedido.color))
@@ -248,7 +293,8 @@ fun DeliveryStopCard(
         Color.LightGray
     }
 
-    val yaEntregado = pedido.estado?.contains("Recoger", ignoreCase = true) == true
+    val tieneCoordenadasValidas = !pedido.coordenadas.isNullOrBlank() &&
+            pedido.coordenadas != "null"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -261,192 +307,186 @@ fun DeliveryStopCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
-            Text(
-                pedido.cliente ?: "Cliente desconocido",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
+            // Header: Nombre, Teléfono y Estado
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    pedido.condominio?.let { condominio ->
-                        if (condominio.isNotBlank()) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Ubicación:",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    condominio,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color.Black
-                                )
-                            }
-                        }
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "Pedido:",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Gray
-                        )
-                        Text(
-                            pedido.id ?: "N/A",
-                            fontSize = 14.sp,
-                            color = Color.Gray
-                        )
-                    }
-
-                    pedido.direccion?.let { direccion ->
-                        if (direccion.isNotBlank()) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    "Dirección:",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    direccion,
-                                    fontSize = 14.sp,
-                                    color = Color.Gray,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-
-                    pedido.informacionAcceso?.let { info ->
-                        if (info.isNotBlank()) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text(
-                                    "Acceso:",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    info,
-                                    fontSize = 13.sp,
-                                    color = Color.Gray,
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-
-                    pedido.telefono?.let { tel ->
-                        if (tel.isNotBlank()) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "Tel:",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.Gray
-                                )
-                                Text(
-                                    tel,
-                                    fontSize = 14.sp,
-                                    color = Colores.Naranja,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
+                Text(
+                    pedido.cliente ?: "Cliente desconocido",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.weight(1f)
+                )
 
                 Column(
                     horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    pedido.horaEntrega?.let { hora ->
-                        Text(
-                            hora.substring(0, 5),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Colores.Naranja
-                        )
+                    pedido.telefono?.let { tel ->
+                        if (tel.isNotBlank()) {
+                            Text(
+                                tel,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Colores.Naranja
+                            )
+                        }
                     }
 
                     pedido.estado?.let { estado ->
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             color = estadoColor.copy(alpha = 0.2f)
                         ) {
                             Text(
                                 estado,
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = estadoColor,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                             )
                         }
                     }
                 }
             }
 
+            // Información del pedido en formato compacto
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    pedido.condominio?.let { condominio ->
+                        if (condominio.isNotBlank()) {
+                            Text(
+                                "Sector: $condominio",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                        }
+                    }
+
+                    pedido.direccion?.let { direccion ->
+                        if (direccion.isNotBlank()) {
+                            Text(
+                                "Dir: $direccion",
+                                fontSize = 11.sp,
+                                color = Color.Gray,
+                                maxLines = 2
+                            )
+                        }
+                    }
+
+                    pedido.informacionAcceso?.let { info ->
+                        if (info.isNotBlank()) {
+                            Text(
+                                "Acceso: $info",
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+
+                // Iconos de acción rápida (Maps y Cámara)
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (tieneCoordenadasValidas) {
+                        IconButton(
+                            onClick = onOpenMaps,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Abrir en Maps",
+                                tint = Colores.Naranja,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+
+                    // Botón de cámara
+                    IconButton(
+                        onClick = {
+                            // Crear URI temporal para la foto (aunque no la guardemos)
+                            val uri = Uri.parse("content://temp")
+                            cameraLauncher.launch(uri)
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Tomar foto",
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+            }
+
+            // Botones de acción
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Botón de 3 fases
                 Button(
-                    onClick = onMarkArrival,
+                    onClick = {
+                        val nuevoEstado = when (estadoPedido.value) {
+                            0 -> 1
+                            1 -> 2
+                            else -> 2
+                        }
+                        estadoPedido.value = nuevoEstado
+                        sharedPrefs.edit().putInt(pedido.id ?: "", nuevoEstado).apply()
+                    },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (yaEntregado) Colores.Naranja else Color.LightGray
+                        containerColor = when (estadoPedido.value) {
+                            0 -> Colores.Naranja
+                            1 -> Color(0xFF4CAF50)
+                            else -> Color.LightGray
+                        }
                     ),
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    enabled = estadoPedido.value != 2,
+                    contentPadding = PaddingValues(vertical = 10.dp)
                 ) {
                     Text(
-                        if (yaEntregado) "Marcar Recoger" else "Marcar Entrega",
+                        when (estadoPedido.value) {
+                            0 -> "Marcar llegada"
+                            1 -> "Marcar salida"
+                            else -> "Finalizado"
+                        },
                         fontSize = 12.sp
                     )
                 }
 
+                // Botón de ver detalles
                 OutlinedButton(
                     onClick = onViewOrder,
-                    modifier = Modifier.weight(0.7f),
+                    modifier = Modifier.weight(0.8f),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Colores.Naranja
                     ),
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        Colores.Naranja
-                    )
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Colores.Naranja),
+                    contentPadding = PaddingValues(vertical = 10.dp)
                 ) {
                     Text("Ver detalles", fontSize = 12.sp)
                 }

@@ -28,3 +28,6 @@ object Inventario
 
 @Serializable
 object RutaDelDia
+
+@Serializable
+data class DetallePedido(val pedidoId: String)

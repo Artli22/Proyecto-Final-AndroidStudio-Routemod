@@ -1,5 +1,6 @@
 package com.limaa.proyectofinal.NavigationRoutes
 
+import com.limaa.proyectofinal.ui.Pantallas.PantallaDetallePedido
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -19,6 +20,7 @@ import com.limaa.proyectofinal.ui.Pantallas.RegistrarseScreen
 import com.limaa.proyectofinal.ui.Pantallas.RouteModScreen
 import com.limaa.proyectofinal.ui.Pantallas.RoutaPantalla
 import com.limaa.proyectofinal.ui.Pantallas.PantallaDelivery
+import androidx.navigation.toRoute
 
 @Composable
 fun AppNavigation(
@@ -126,8 +128,8 @@ fun AppNavigation(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onViewOrder = { _ ->
-
+                onViewOrder = { pedidoId ->
+                    navController.navigate(DetallePedido(pedidoId = pedidoId))
                 }
             )
         }
@@ -161,6 +163,16 @@ fun AppNavigation(
                     }
                 },
                 onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable<DetallePedido> { backStackEntry ->
+            val route = backStackEntry.toRoute<DetallePedido>()
+            PantallaDetallePedido(
+                pedidoId = route.pedidoId,
+                onNavigateBack = {
                     navController.popBackStack()
                 }
             )
