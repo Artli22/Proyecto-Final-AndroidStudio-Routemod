@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
-
 class PedidoDetalleViewModel : ViewModel() {
 
     private val _detalleState = MutableLiveData<Result<PedidoDetalleResponse>?>()
@@ -66,7 +65,7 @@ class PedidoDetalleViewModel : ViewModel() {
 
                     body.detalle?.forEachIndexed { index, item ->
                         Log.d("PedidoDetalleVM", "")
-                        Log.d("PedidoDetalleVM", "  📦 Item #${index + 1}:")
+                        Log.d("PedidoDetalleVM", "    Item #${index + 1}:")
                         Log.d("PedidoDetalleVM", "    Parte: ${item.parte}")
                         Log.d("PedidoDetalleVM", "    Artículo: ${item.articulo}")
                         Log.d("PedidoDetalleVM", "    Nombre: ${item.nombre}")

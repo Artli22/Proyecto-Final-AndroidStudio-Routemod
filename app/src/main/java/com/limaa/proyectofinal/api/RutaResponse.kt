@@ -6,10 +6,9 @@ data class RutaResponse(
     val ok: Boolean? = null,
     val mensaje: String? = null,
     val error: String? = null,
-
     @SerializedName("productos")
     val pedidos: List<Pedido>? = null,
-
+    @SerializedName("carga")
     val carga: List<ItemCarga>? = null
 )
 

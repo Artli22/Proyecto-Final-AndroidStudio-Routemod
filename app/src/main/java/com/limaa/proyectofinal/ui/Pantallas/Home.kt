@@ -41,6 +41,11 @@ fun RouteModScreen(
 
     val pedidos = rutaState?.getOrNull()?.pedidos ?: emptyList()
     val primerosTresPedidos = pedidos.take(3)
+    val itemsCarga = rutaState?.getOrNull()?.carga ?: emptyList()
+    val itemsPositivos = itemsCarga.filter { item ->
+        (item.cantidadCarga?.toDoubleOrNull() ?: 0.0) > 0
+    }
+    val primerosTresItems = itemsPositivos.take(3)
 
     Box(
         modifier = Modifier
@@ -112,40 +117,50 @@ fun RouteModScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Producto A",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                    Text(
-                        text = "Cantidad X",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Gray
-                    )
-                }
+                if (primerosTresItems.isEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Cargando...",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray
+                        )
+                    }
+                } else {
+                    primerosTresItems.forEachIndexed { index, item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = item.nombreArticulo?.ifBlank { "Sin nombre" }
+                                    ?: "Sin nombre",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                modifier = Modifier.weight(1f)
+                            )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "Cantidad ${item.cantidadCarga?.toDoubleOrNull()?.toInt() ?: 0}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Gray
+                            )
+                        }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Producto B",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                    Text(
-                        text = "Cantidad X",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Gray
-                    )
+                        if (index < primerosTresItems.size - 1) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
