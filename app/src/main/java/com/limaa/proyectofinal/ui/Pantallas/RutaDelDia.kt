@@ -48,7 +48,9 @@ fun RoutaPantalla(
     val isLoading by viewModel.isLoading.observeAsState(false)
 
     LaunchedEffect(Unit) {
-        viewModel.obtenerRutaDelDia(context)
+        if (rutaState == null) {
+            viewModel.obtenerRutaDelDia(context)
+        }
     }
 
     Scaffold(
@@ -225,7 +227,6 @@ fun RoutaPantalla(
                                     pedido = pedido,
                                     onViewOrder = { onViewOrder(pedido.id ?: "") },
                                     onOpenMaps = {
-                                        // Abrir Google Maps con las coordenadas
                                         pedido.coordenadas?.let { coords ->
                                             if (coords.isNotBlank() && coords != "null") {
                                                 val intent = Intent(
@@ -237,7 +238,6 @@ fun RoutaPantalla(
                                                 try {
                                                     context.startActivity(intent)
                                                 } catch (e: Exception) {
-                                                    // Si Google Maps no está instalado, usar el navegador
                                                     val webIntent = Intent(
                                                         Intent.ACTION_VIEW,
                                                         Uri.parse("https://www.google.com/maps/search/?api=1&query=$coords")
@@ -271,10 +271,8 @@ fun DeliveryStopCard(
     val context = LocalContext.current
     val sharedPrefs = context.getSharedPreferences("pedidos_estado", Context.MODE_PRIVATE)
 
-    // Estado del pedido: 0 = No iniciado, 1 = Llegada marcada, 2 = Salida marcada (Finalizado)
     val estadoPedido = remember { mutableStateOf(sharedPrefs.getInt(pedido.id ?: "", 0)) }
 
-    // Launcher para la cámara
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
@@ -309,7 +307,6 @@ fun DeliveryStopCard(
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            // Header: Nombre, Teléfono y Estado
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -357,7 +354,6 @@ fun DeliveryStopCard(
                 }
             }
 
-            // Información del pedido en formato compacto
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -401,7 +397,6 @@ fun DeliveryStopCard(
                     }
                 }
 
-                // Iconos de acción rápida (Maps y Cámara)
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -420,10 +415,8 @@ fun DeliveryStopCard(
                         }
                     }
 
-                    // Botón de cámara
                     IconButton(
                         onClick = {
-                            // Crear URI temporal para la foto (aunque no la guardemos)
                             val uri = Uri.parse("content://temp")
                             cameraLauncher.launch(uri)
                         },
@@ -439,12 +432,10 @@ fun DeliveryStopCard(
                 }
             }
 
-            // Botones de acción
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Botón de 3 fases
                 Button(
                     onClick = {
                         val nuevoEstado = when (estadoPedido.value) {
@@ -477,7 +468,6 @@ fun DeliveryStopCard(
                     )
                 }
 
-                // Botón de ver detalles
                 OutlinedButton(
                     onClick = onViewOrder,
                     modifier = Modifier.weight(0.8f),

@@ -21,12 +21,16 @@ import com.limaa.proyectofinal.ui.Pantallas.RouteModScreen
 import com.limaa.proyectofinal.ui.Pantallas.RoutaPantalla
 import com.limaa.proyectofinal.ui.Pantallas.PantallaDelivery
 import androidx.navigation.toRoute
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.limaa.proyectofinal.RutaViewModel
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     innerPadding: PaddingValues
 ) {
+    val rutaViewModel: RutaViewModel = viewModel()
+
     NavHost(
         navController = navController,
         startDestination = PantallaInicio,
@@ -79,8 +83,18 @@ fun AppNavigation(
         }
 
         composable<LocationAccess> {
+            val context = LocalContext.current
+
+            LaunchedEffect(Unit) {
+                if (context.hasLocationPermission()) {
+                    navController.navigate(Home) {
+                        popUpTo(LocationAccess) { inclusive = true }
+                    }
+                }
+            }
+
             LocationAccessScreen(
-                onAccederUbicacion = {
+                onPermissionGranted = {
                     navController.navigate(Home) {
                         popUpTo(Login) { inclusive = false }
                     }
@@ -106,7 +120,8 @@ fun AppNavigation(
                     navController.navigate(Login) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                viewModel = rutaViewModel
             )
         }
 
@@ -130,7 +145,8 @@ fun AppNavigation(
                 },
                 onViewOrder = { pedidoId ->
                     navController.navigate(DetallePedido(pedidoId = pedidoId))
-                }
+                },
+                viewModel = rutaViewModel
             )
         }
 
@@ -140,29 +156,6 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onSaveClick = {
-                    navController.popBackStack()
-                }
-            )
-        }
-        composable<LocationAccess> {
-            val context = LocalContext.current
-
-            // Verifica si YA tiene permiso → salta la pantalla
-            LaunchedEffect(Unit) {
-                if (context.hasLocationPermission()) {
-                    navController.navigate(Home) {
-                        popUpTo(LocationAccess) { inclusive = true }
-                    }
-                }
-            }
-
-            LocationAccessScreen(
-                onPermissionGranted = {
-                    navController.navigate(Home) {
-                        popUpTo(Login) { inclusive = false }
-                    }
-                },
-                onBackClick = {
                     navController.popBackStack()
                 }
             )

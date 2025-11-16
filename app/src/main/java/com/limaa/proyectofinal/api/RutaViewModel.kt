@@ -70,11 +70,11 @@ class RutaViewModel : ViewModel() {
                     Log.d("RutaViewModel", "Total pedidos: ${body.pedidos?.size ?: 0}")
 
                     if (body.pedidos.isNullOrEmpty()) {
-                        Log.w("RutaViewModel", "⚠️ La lista de pedidos está vacía")
+                        Log.w("RutaViewModel", "La lista de pedidos está vacía")
                     } else {
                         body.pedidos.forEachIndexed { index, pedido ->
                             Log.d("RutaViewModel", "")
-                            Log.d("RutaViewModel", "  📦 Pedido #${index + 1}:")
+                            Log.d("RutaViewModel", "    Pedido #${index + 1}:")
                             Log.d("RutaViewModel", "    ID: ${pedido.id}")
                             Log.d("RutaViewModel", "    Cliente: ${pedido.cliente}")
                             Log.d("RutaViewModel", "    Teléfono: ${pedido.telefono}")
@@ -105,23 +105,23 @@ class RutaViewModel : ViewModel() {
                     Log.d("RutaViewModel", "Total items carga: ${body.carga?.size ?: 0}")
 
                     if (body.carga.isNullOrEmpty()) {
-                        Log.w("RutaViewModel", "⚠️ La lista de carga está vacía")
+                        Log.w("RutaViewModel", "La lista de carga está vacía")
                     } else {
                         body.carga.forEachIndexed { index, item ->
                             Log.d("RutaViewModel", "")
-                            Log.d("RutaViewModel", "  📦 Item #${index + 1}:")
+                            Log.d("RutaViewModel", "    Item #${index + 1}:")
                             Log.d("RutaViewModel", "    Tipo producto: ${item.tipoProducto}")
                             Log.d("RutaViewModel", "    Nombre artículo: ${item.nombreArticulo}")
                             Log.d("RutaViewModel", "    Suma entrega: ${item.sumaEntrega}")
                             Log.d("RutaViewModel", "    Suma recoge: ${item.sumaRecoge}")
-                            Log.d("RutaViewModel", "    ⚠️ CANTIDAD A CARGAR: ${item.cantidadCarga}")
+                            Log.d("RutaViewModel", "    CANTIDAD A CARGAR: ${item.cantidadCarga}")
                         }
 
                         val totalCargar = body.carga.sumOf {
                             it.cantidadCarga?.toDoubleOrNull()?.toInt() ?: 0
                         }
                         Log.d("RutaViewModel", "")
-                        Log.d("RutaViewModel", "  📊 RESUMEN INVENTARIO:")
+                        Log.d("RutaViewModel", "    RESUMEN INVENTARIO:")
                         Log.d("RutaViewModel", "    Total artículos diferentes: ${body.carga.size}")
                         Log.d("RutaViewModel", "    Total unidades a cargar: $totalCargar")
                     }
@@ -131,10 +131,10 @@ class RutaViewModel : ViewModel() {
                     // ========== FIN LOGS ==========
 
                     if (body.error != null) {
-                        Log.e("RutaViewModel", "❌ Error del servidor: ${body.error}")
+                        Log.e("RutaViewModel", "Error del servidor: ${body.error}")
                         _rutaState.value = Result.failure(Exception(body.error))
                     } else {
-                        Log.d("RutaViewModel", "✅ Ruta obtenida exitosamente")
+                        Log.d("RutaViewModel", "Ruta obtenida exitosamente")
                         _rutaState.value = Result.success(body)
                     }
                 } else {
@@ -144,13 +144,13 @@ class RutaViewModel : ViewModel() {
                 }
 
             } catch (e: IOException) {
-                Log.e("RutaViewModel", "❌ Error de conexión: ${e.message}", e)
+                Log.e("RutaViewModel", "Error de conexión: ${e.message}", e)
                 _rutaState.value = Result.failure(Exception("Error de conexión"))
             } catch (e: HttpException) {
-                Log.e("RutaViewModel", "❌ Error HTTP: ${e.code()}", e)
+                Log.e("RutaViewModel", "Error HTTP: ${e.code()}", e)
                 _rutaState.value = Result.failure(Exception("Error HTTP"))
             } catch (e: Exception) {
-                Log.e("RutaViewModel", "❌ Error inesperado: ${e.message}", e)
+                Log.e("RutaViewModel", "Error inesperado: ${e.message}", e)
                 e.printStackTrace()
                 _rutaState.value = Result.failure(Exception("Error inesperado: ${e.message}"))
             } finally {

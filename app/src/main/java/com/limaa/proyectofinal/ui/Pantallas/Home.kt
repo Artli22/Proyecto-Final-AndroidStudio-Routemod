@@ -2,21 +2,23 @@ package com.limaa.proyectofinal.ui.Pantallas
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.limaa.proyectofinal.RutaViewModel
 
 // Creado por Arturo Lima
 
@@ -25,8 +27,21 @@ fun RouteModScreen(
     onVerMasInventario: () -> Unit = {},
     onVerMasRuta: () -> Unit = {},
     onPerfilClick: () -> Unit = {},
-    onCerrarSesion: () -> Unit = {}
+    onCerrarSesion: () -> Unit = {},
+    viewModel: RutaViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val rutaState by viewModel.rutaState.observeAsState()
+
+    LaunchedEffect(Unit) {
+        if (rutaState == null) {
+            viewModel.obtenerRutaDelDia(context)
+        }
+    }
+
+    val pedidos = rutaState?.getOrNull()?.pedidos ?: emptyList()
+    val primerosTresPedidos = pedidos.take(3)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -186,40 +201,50 @@ fun RouteModScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Los Manantiales",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                    Text(
-                        text = "7ma Calle 5-26",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Gray
-                    )
-                }
+                if (primerosTresPedidos.isEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Cargando...",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray
+                        )
+                        Text(
+                            text = "",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.Gray
+                        )
+                    }
+                } else {
+                    primerosTresPedidos.forEachIndexed { index, pedido ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = pedido.condominio?.ifBlank { "Sin ubicación" }
+                                    ?: "Sin ubicación",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal
+                            )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = pedido.telefono?.ifBlank { "Sin teléfono" }
+                                    ?: "Sin teléfono",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.Gray
+                            )
+                        }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Montevista Club",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-                    Text(
-                        text = "Casa 113",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Gray
-                    )
+                        if (index < primerosTresPedidos.size - 1) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

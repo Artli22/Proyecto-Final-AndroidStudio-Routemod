@@ -10,7 +10,6 @@ data class RutaResponse(
     @SerializedName("productos")
     val pedidos: List<Pedido>? = null,
 
-    // Carga viene en el mismo JSON
     val carga: List<ItemCarga>? = null
 )
 
@@ -59,7 +58,6 @@ data class Pedido(
     val restriccionRecoger: String? = null
 )
 
-// Modelos de la carga
 data class ItemCarga(
     @SerializedName("tipo")
     val tipoProducto: String? = null,
