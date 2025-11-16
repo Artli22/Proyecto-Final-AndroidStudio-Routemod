@@ -12,16 +12,10 @@ object Login
 object OlvideContrasena
 
 @Serializable
-object SignUp
-
-@Serializable
 object LocationAccess
 
 @Serializable
 object Home
-
-@Serializable
-object EditProfile
 
 @Serializable
 object Inventario

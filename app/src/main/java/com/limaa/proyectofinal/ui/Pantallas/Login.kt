@@ -36,7 +36,6 @@ object LoginColors {
 fun LoginScreen(
     onLoginSuccess: (String) -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
-    onRegisterClick: () -> Unit = {},
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -60,7 +59,6 @@ fun LoginScreen(
                         Toast.LENGTH_SHORT
                     ).show()
                 } else if (response.ok == true) {
-                    // GUARDAR TOKEN Y USUARIO
                     TokenManager.saveToken(
                         context,
                         response.token ?: "",
@@ -73,13 +71,10 @@ fun LoginScreen(
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // ========== PRUEBA TEMPORAL: Llamar a obtener ruta ==========
                     Log.d("LoginScreen", "Iniciando prueba de obtener ruta...")
                     val rutaViewModel = RutaViewModel()
                     rutaViewModel.obtenerRutaDelDia(context)
                     Log.d("LoginScreen", "Llamada a obtenerRutaDelDia ejecutada")
-                    // ============================================================
-
 
                     onLoginSuccess(response.token ?: "")
                 } else {
@@ -281,29 +276,6 @@ fun LoginScreen(
                 )
             }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "¿No tienes una cuenta?",
-                fontSize = 12.sp,
-                color = LoginColors.LightGray
-            )
-            TextButton(onClick = onRegisterClick) {
-                Text(
-                    "REGÍSTRATE",
-                    color = LoginColors.Orange,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
         Spacer(modifier = Modifier.height(16.dp))
     }
 }

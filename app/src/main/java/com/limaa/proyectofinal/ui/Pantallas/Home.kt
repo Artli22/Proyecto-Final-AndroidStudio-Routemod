@@ -2,10 +2,7 @@ package com.limaa.proyectofinal.ui.Pantallas
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -26,21 +23,24 @@ import com.limaa.proyectofinal.RutaViewModel
 fun RouteModScreen(
     onVerMasInventario: () -> Unit = {},
     onVerMasRuta: () -> Unit = {},
-    onPerfilClick: () -> Unit = {},
     onCerrarSesion: () -> Unit = {},
     viewModel: RutaViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val rutaState by viewModel.rutaState.observeAsState()
 
+    // ✅ Cargar TODOS los datos de la API (solo si no hay datos)
     LaunchedEffect(Unit) {
         if (rutaState == null) {
             viewModel.obtenerRutaDelDia(context)
         }
     }
 
+    // Obtener los primeros 3 pedidos (rutas)
     val pedidos = rutaState?.getOrNull()?.pedidos ?: emptyList()
     val primerosTresPedidos = pedidos.take(3)
+
+    // ✅ Obtener los primeros 3 items de inventario (solo con cantidad positiva)
     val itemsCarga = rutaState?.getOrNull()?.carga ?: emptyList()
     val itemsPositivos = itemsCarga.filter { item ->
         (item.cantidadCarga?.toDoubleOrNull() ?: 0.0) > 0
@@ -57,6 +57,7 @@ fun RouteModScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+            // ✅ Header con botón de cerrar sesión en la esquina
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,26 +76,29 @@ fun RouteModScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                IconButton(
-                    onClick = onPerfilClick,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = Color(0xFFFFC6AE),
-                            shape = CircleShape
-                        )
+                // ✅ Botón de cerrar sesión (reemplaza el ícono de usuario)
+                Button(
+                    onClick = onCerrarSesion,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFC6AE)
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.height(36.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = "Perfil",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+                    Text(
+                        text = "CERRAR SESIÓN",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        letterSpacing = 0.5.sp
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(88.dp))
 
+            // Sección de Inventario
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -117,6 +121,7 @@ fun RouteModScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Mostrar los primeros 3 items o mensaje de carga
                 if (primerosTresItems.isEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -194,6 +199,7 @@ fun RouteModScreen(
 
             Spacer(modifier = Modifier.height(88.dp))
 
+            // Sección de Ruta Diaria
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -292,27 +298,6 @@ fun RouteModScreen(
             }
 
             Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = onCerrarSesion,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(horizontal = 32.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF7622)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = "CERRAR SESIÓN",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

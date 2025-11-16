@@ -11,12 +11,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.limaa.proyectofinal.Utils.hasLocationPermission
-import com.limaa.proyectofinal.ui.Pantallas.EditProfileScreen
 import com.limaa.proyectofinal.ui.Pantallas.ForgotPasswordScreen
 import com.limaa.proyectofinal.ui.Pantallas.LocationAccessScreen
 import com.limaa.proyectofinal.ui.Pantallas.LoginScreen
 import com.limaa.proyectofinal.ui.Pantallas.PantallaInventarioVehiculo
-import com.limaa.proyectofinal.ui.Pantallas.RegistrarseScreen
 import com.limaa.proyectofinal.ui.Pantallas.RouteModScreen
 import com.limaa.proyectofinal.ui.Pantallas.RoutaPantalla
 import com.limaa.proyectofinal.ui.Pantallas.PantallaDelivery
@@ -53,9 +51,6 @@ fun AppNavigation(
                 },
                 onForgotPasswordClick = {
                     navController.navigate(OlvideContrasena)
-                },
-                onRegisterClick = {
-                    navController.navigate(SignUp)
                 }
             )
         }
@@ -66,17 +61,6 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onBackClick = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable<SignUp> {
-            RegistrarseScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onRegisterClick = {
                     navController.popBackStack()
                 }
             )
@@ -113,9 +97,6 @@ fun AppNavigation(
                 onVerMasRuta = {
                     navController.navigate(RutaDelDia)
                 },
-                onPerfilClick = {
-                    navController.navigate(EditProfile)
-                },
                 onCerrarSesion = {
                     navController.navigate(Login) {
                         popUpTo(0) { inclusive = true }
@@ -134,7 +115,8 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 alDetalle = {
-                }
+                },
+                rutaViewModel = rutaViewModel
             )
         }
 
@@ -147,17 +129,6 @@ fun AppNavigation(
                     navController.navigate(DetallePedido(pedidoId = pedidoId))
                 },
                 viewModel = rutaViewModel
-            )
-        }
-
-        composable<EditProfile> {
-            EditProfileScreen(
-                onBackClick = {
-                    navController.popBackStack()
-                },
-                onSaveClick = {
-                    navController.popBackStack()
-                }
             )
         }
 
