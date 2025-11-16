@@ -55,6 +55,7 @@ class RutaViewModel : ViewModel() {
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
 
+                    // ========== LOGS COMPLETOS PARA DEBUG ==========
                     Log.d("RutaViewModel", "==========================================")
                     Log.d("RutaViewModel", "RESPUESTA COMPLETA DE LA RUTA:")
                     Log.d("RutaViewModel", "==========================================")
@@ -62,30 +63,78 @@ class RutaViewModel : ViewModel() {
                     Log.d("RutaViewModel", "OK: ${body.ok}")
                     Log.d("RutaViewModel", "Mensaje: ${body.mensaje}")
                     Log.d("RutaViewModel", "Error: ${body.error}")
-                    Log.d("RutaViewModel", "Cantidad pedidos: ${body.pedidos?.size ?: 0}")
 
-                    body.pedidos?.forEachIndexed { index, pedido ->
-                        Log.d("RutaViewModel", "  Pedido #${index + 1}:")
-                        Log.d("RutaViewModel", "    ID: ${pedido.id}")
-                        Log.d("RutaViewModel", "    Cliente: ${pedido.cliente}")
-                        Log.d("RutaViewModel", "    Condominio: ${pedido.condominio}")
-                        Log.d("RutaViewModel", "    Dirección: ${pedido.direccion}")
-                        Log.d("RutaViewModel", "    Teléfono: ${pedido.telefono}")
-                        Log.d("RutaViewModel", "    Hora Entrega: ${pedido.horaEntrega}")
-                        Log.d("RutaViewModel", "    Estado: ${pedido.estado}")
-                    }
+                    // ========== PEDIDOS ==========
+                    Log.d("RutaViewModel", "")
+                    Log.d("RutaViewModel", "--- PEDIDOS (PRODUCTOS) ---")
+                    Log.d("RutaViewModel", "Total pedidos: ${body.pedidos?.size ?: 0}")
 
                     if (body.pedidos.isNullOrEmpty()) {
-                        Log.w("RutaViewModel", "La lista de pedidos está vacía")
+                        Log.w("RutaViewModel", "⚠️ La lista de pedidos está vacía")
+                    } else {
+                        body.pedidos.forEachIndexed { index, pedido ->
+                            Log.d("RutaViewModel", "")
+                            Log.d("RutaViewModel", "  📦 Pedido #${index + 1}:")
+                            Log.d("RutaViewModel", "    ID: ${pedido.id}")
+                            Log.d("RutaViewModel", "    Cliente: ${pedido.cliente}")
+                            Log.d("RutaViewModel", "    Teléfono: ${pedido.telefono}")
+                            Log.d("RutaViewModel", "    Dirección: ${pedido.direccion}")
+                            Log.d("RutaViewModel", "    Condominio: ${pedido.condominio}")
+                            Log.d("RutaViewModel", "    Info acceso: ${pedido.informacionAcceso}")
+                            Log.d("RutaViewModel", "    Estado: ${pedido.estado}")
+                            Log.d("RutaViewModel", "    --- Fechas y Horas ---")
+                            Log.d("RutaViewModel", "    Fecha entrega: ${pedido.fechaEntrega}")
+                            Log.d("RutaViewModel", "    Hora entrega: ${pedido.horaEntrega}")
+                            Log.d("RutaViewModel", "    Fecha recoger: ${pedido.fechaRecoger}")
+                            Log.d("RutaViewModel", "    Hora recoger: ${pedido.horaRecoger}")
+                            Log.d("RutaViewModel", "    --- Colores ---")
+                            Log.d("RutaViewModel", "    Color fondo: ${pedido.color}")
+                            Log.d("RutaViewModel", "    Color texto: ${pedido.colortexto}")
+                            Log.d("RutaViewModel", "    --- Detalles ---")
+                            Log.d("RutaViewModel", "    Coordenadas: ${pedido.coordenadas}")
+                            Log.d("RutaViewModel", "    Vive ahí: ${pedido.viveAhi}")
+                            Log.d("RutaViewModel", "    Lugar montaje: ${pedido.lugarMontaje}")
+                            Log.d("RutaViewModel", "    Restricción entrega: ${pedido.restriccionEntrega}")
+                            Log.d("RutaViewModel", "    Restricción recoger: ${pedido.restriccionRecoger}")
+                        }
                     }
 
+                    // ========== INVENTARIO/CARGA ==========
+                    Log.d("RutaViewModel", "")
+                    Log.d("RutaViewModel", "--- INVENTARIO/CARGA ---")
+                    Log.d("RutaViewModel", "Total items carga: ${body.carga?.size ?: 0}")
+
+                    if (body.carga.isNullOrEmpty()) {
+                        Log.w("RutaViewModel", "⚠️ La lista de carga está vacía")
+                    } else {
+                        body.carga.forEachIndexed { index, item ->
+                            Log.d("RutaViewModel", "")
+                            Log.d("RutaViewModel", "  📦 Item #${index + 1}:")
+                            Log.d("RutaViewModel", "    Tipo producto: ${item.tipoProducto}")
+                            Log.d("RutaViewModel", "    Nombre artículo: ${item.nombreArticulo}")
+                            Log.d("RutaViewModel", "    Suma entrega: ${item.sumaEntrega}")
+                            Log.d("RutaViewModel", "    Suma recoge: ${item.sumaRecoge}")
+                            Log.d("RutaViewModel", "    ⚠️ CANTIDAD A CARGAR: ${item.cantidadCarga}")
+                        }
+
+                        val totalCargar = body.carga.sumOf {
+                            it.cantidadCarga?.toDoubleOrNull()?.toInt() ?: 0
+                        }
+                        Log.d("RutaViewModel", "")
+                        Log.d("RutaViewModel", "  📊 RESUMEN INVENTARIO:")
+                        Log.d("RutaViewModel", "    Total artículos diferentes: ${body.carga.size}")
+                        Log.d("RutaViewModel", "    Total unidades a cargar: $totalCargar")
+                    }
+
+                    Log.d("RutaViewModel", "")
                     Log.d("RutaViewModel", "==========================================")
+                    // ========== FIN LOGS ==========
 
                     if (body.error != null) {
-                        Log.e("RutaViewModel", "Error del servidor: ${body.error}")
+                        Log.e("RutaViewModel", "❌ Error del servidor: ${body.error}")
                         _rutaState.value = Result.failure(Exception(body.error))
                     } else {
-                        Log.d("RutaViewModel", "Pedidos obtenidos exitosamente")
+                        Log.d("RutaViewModel", "✅ Ruta obtenida exitosamente")
                         _rutaState.value = Result.success(body)
                     }
                 } else {
@@ -95,13 +144,13 @@ class RutaViewModel : ViewModel() {
                 }
 
             } catch (e: IOException) {
-                Log.e("RutaViewModel", "Error de conexión: ${e.message}", e)
+                Log.e("RutaViewModel", "❌ Error de conexión: ${e.message}", e)
                 _rutaState.value = Result.failure(Exception("Error de conexión"))
             } catch (e: HttpException) {
-                Log.e("RutaViewModel", "Error HTTP: ${e.code()}", e)
+                Log.e("RutaViewModel", "❌ Error HTTP: ${e.code()}", e)
                 _rutaState.value = Result.failure(Exception("Error HTTP"))
             } catch (e: Exception) {
-                Log.e("RutaViewModel", "Error inesperado: ${e.message}", e)
+                Log.e("RutaViewModel", "❌ Error inesperado: ${e.message}", e)
                 e.printStackTrace()
                 _rutaState.value = Result.failure(Exception("Error inesperado: ${e.message}"))
             } finally {

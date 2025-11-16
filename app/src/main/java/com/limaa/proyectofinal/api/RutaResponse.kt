@@ -6,8 +6,12 @@ data class RutaResponse(
     val ok: Boolean? = null,
     val mensaje: String? = null,
     val error: String? = null,
+
     @SerializedName("productos")
-    val pedidos: List<Pedido>? = null
+    val pedidos: List<Pedido>? = null,
+
+    // Carga viene en el mismo JSON
+    val carga: List<ItemCarga>? = null
 )
 
 data class Pedido(
@@ -55,3 +59,20 @@ data class Pedido(
     val restriccionRecoger: String? = null
 )
 
+// Modelos de la carga
+data class ItemCarga(
+    @SerializedName("tipo")
+    val tipoProducto: String? = null,
+
+    @SerializedName("articulo")
+    val nombreArticulo: String? = null,
+
+    @SerializedName("suma_entrega")
+    val sumaEntrega: String? = null,
+
+    @SerializedName("suma_recoge")
+    val sumaRecoge: String? = null,
+
+    @SerializedName("cantidad_carga")
+    val cantidadCarga: String? = null
+)
