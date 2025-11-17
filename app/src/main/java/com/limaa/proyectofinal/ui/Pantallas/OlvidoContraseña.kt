@@ -3,166 +3,137 @@ package com.limaa.proyectofinal.ui.Pantallas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Creado por: Arturo Lima
-object ForgotPasswordColors {
-    val Orange = Color(0xFFFF7A3D)
-    val DarkBackground = Color(0xFF1A1A2E)
-    val LightGray = Color(0xFF9E9E9E)
-    val TextFieldBackground = Color(0xFFF5F5F5)
-}
-@Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordScreen(
-    onSendCodeClick: (email: String) -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onSendCodeClick: (String) -> Unit = {} // Ya no se usa pero lo dejo por compatibilidad
 ) {
-    var email by remember { mutableStateOf("") }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(40.dp))
-
-        Text(
-            "Forgot Password",
-            fontSize = 14.sp,
-            color = ForgotPasswordColors.LightGray,
-            modifier = Modifier.align(Alignment.Start)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = ForgotPasswordColors.DarkBackground
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Olvidé mi contraseña",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = LoginColors.Orange,
+                    titleContentColor = Color.White
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color.White)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Icono grande de información
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "Información",
+                modifier = Modifier.size(120.dp),
+                tint = LoginColors.Orange
+            )
 
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Mensaje principal
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = LoginColors.Orange.copy(alpha = 0.1f)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
                 Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 24.dp),
+                    modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "Olvidé mi contraseña",
-                        fontSize = 22.sp,
+                        "Si olvidaste tu contraseña",
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = LoginColors.DarkBackground,
+                        textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        "Por favor, inicie sesión en su cuenta existente",
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.8f)
+                        "Comunícate con el administrador de tu empresa",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = LoginColors.Orange,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Divider(
+                        color = LoginColors.Orange.copy(alpha = 0.3f),
+                        thickness = 1.dp
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        "El administrador podrá restablecer tu contraseña de forma segura.",
+                        fontSize = 14.sp,
+                        color = LoginColors.LightGray,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-        Text(
-            "EMAIL",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.align(Alignment.Start)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = {
+            // Botón para volver
+            Button(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = LoginColors.Orange
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
                 Text(
-                    "ejemplo@gmail.com",
-                    color = ForgotPasswordColors.LightGray,
-                    fontSize = 14.sp
+                    "VOLVER AL LOGIN",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedContainerColor = ForgotPasswordColors.TextFieldBackground,
-                focusedContainerColor = ForgotPasswordColors.TextFieldBackground,
-                unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = ForgotPasswordColors.Orange
-            ),
-            shape = RoundedCornerShape(8.dp),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = { onSendCodeClick(email) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ForgotPasswordColors.Orange
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                "Enviar codigo",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-    }
-}
-@Preview(showBackground = true, name = "Forgot Password Screen")
-@Composable
-fun PreviewForgotPasswordScreen() {
-    MaterialTheme {
-        ForgotPasswordScreen(
-            onSendCodeClick = { email ->
-            },
-            onBackClick = {
             }
-        )
+        }
     }
 }

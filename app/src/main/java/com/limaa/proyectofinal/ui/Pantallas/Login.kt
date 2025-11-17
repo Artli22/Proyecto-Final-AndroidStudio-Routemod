@@ -23,6 +23,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import com.limaa.proyectofinal.TokenManager
 import android.util.Log
 import com.limaa.proyectofinal.RutaViewModel
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.Icons
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.fillMaxWidth
+
 
 object LoginColors {
     val Orange = Color(0xFFFF7A3D)
@@ -44,8 +52,10 @@ fun LoginScreen(
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+
 
     val loginState by loginViewModel.loginState.observeAsState()
 
@@ -107,13 +117,6 @@ fun LoginScreen(
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
-        Text(
-            "Log In_Empty",
-            fontSize = 14.sp,
-            color = LoginColors.LightGray,
-            modifier = Modifier.align(Alignment.Start)
-        )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Card(
@@ -166,7 +169,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
                 Text(
-                    "Ejemplo: adm12",
+                    "Ejemplo funcional: C1",
                     color = LoginColors.LightGray,
                     fontSize = 14.sp
                 )
@@ -200,7 +203,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
                 Text(
-                    "* * * * * * * * * * *",
+                    "Contraseña funcional: Slv2025",
                     color = LoginColors.LightGray,
                     fontSize = 14.sp
                 )
@@ -213,7 +216,26 @@ fun LoginScreen(
             ),
             shape = RoundedCornerShape(8.dp),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            visualTransformation = if (passwordVisible)
+                VisualTransformation.None
+            else
+                PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible)
+                            Icons.Default.Visibility
+                        else
+                            Icons.Default.VisibilityOff,
+                        contentDescription = if (passwordVisible)
+                            "Ocultar contraseña"
+                        else
+                            "Mostrar contraseña",
+                        tint = LoginColors.LightGray
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -289,18 +311,13 @@ fun LoginScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "¿No tienes una cuenta?",
+                text = "Si aún no tienes credenciales de usuario, solicítalas a tu administrador",
                 fontSize = 12.sp,
-                color = LoginColors.LightGray
+                color = LoginColors.LightGray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
-            TextButton(onClick = onRegisterClick) {
-                Text(
-                    "REGÍSTRATE",
-                    color = LoginColors.Orange,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+
         }
 
         Spacer(modifier = Modifier.height(16.dp))
