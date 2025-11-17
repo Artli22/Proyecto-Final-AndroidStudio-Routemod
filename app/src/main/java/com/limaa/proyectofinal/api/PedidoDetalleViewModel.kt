@@ -56,7 +56,7 @@ class PedidoDetalleViewModel : ViewModel() {
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
 
-                    // ========== LOGS PARA DEBUG ==========
+                    //historial para deebug
                     Log.d("PedidoDetalleVM", "==========================================")
                     Log.d("PedidoDetalleVM", "DETALLE DEL PEDIDO:")
                     Log.d("PedidoDetalleVM", "==========================================")

@@ -17,7 +17,7 @@ class LoginViewModel : ViewModel() {
     private val api = ApiClient.retrofit.create(ApiService::class.java)
 
 
-
+    // maneja login, loading y errores con Result
     fun login(usuario: String, contrasena: String) {
         viewModelScope.launch {
             try {

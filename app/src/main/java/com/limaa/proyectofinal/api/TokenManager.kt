@@ -12,7 +12,7 @@ object TokenManager {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
-    // Guardar token y usuario
+    // guarda y lee token/usuario en SharedPreferences
     fun saveToken(context: Context, token: String, usuario: String) {
         getPrefs(context).edit().apply {
             putString(KEY_TOKEN, token)

@@ -28,7 +28,7 @@ fun AppNavigation(
     innerPadding: PaddingValues
 ) {
     val rutaViewModel: RutaViewModel = viewModel()
-
+// define el grafo de navegación y los destinos
     NavHost(
         navController = navController,
         startDestination = PantallaInicio,
@@ -68,7 +68,7 @@ fun AppNavigation(
 
         composable<LocationAccess> {
             val context = LocalContext.current
-
+// si ya tiene permiso, salta directamente
             LaunchedEffect(Unit) {
                 if (context.hasLocationPermission()) {
                     navController.navigate(Home) {

@@ -1,7 +1,7 @@
 package com.limaa.proyectofinal.NavigationRoutes
 
 import kotlinx.serialization.Serializable
-
+// rutas tipadas con @Serializable para evitar errores de string
 @Serializable
 object PantallaInicio
 

@@ -16,7 +16,7 @@ object ApiClient {
     fun init(context: Context) {
         appContext = context.applicationContext
     }
-
+    // crea Retrofit con logging, timeout y auth interceptor
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }

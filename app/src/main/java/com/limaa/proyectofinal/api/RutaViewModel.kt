@@ -19,7 +19,7 @@ class RutaViewModel : ViewModel() {
     val isLoading: LiveData<Boolean> = _isLoading
 
     private val api = ApiClient.retrofit.create(ApiService::class.java)
-
+    // obtiene ruta + inventario, con logs detallados para debug
     fun obtenerRutaDelDia(context: Context) {
         viewModelScope.launch {
             try {
@@ -55,7 +55,7 @@ class RutaViewModel : ViewModel() {
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
 
-                    // ========== LOGS COMPLETOS PARA DEBUG ==========
+                    //Historial completos para debug
                     Log.d("RutaViewModel", "==========================================")
                     Log.d("RutaViewModel", "RESPUESTA COMPLETA DE LA RUTA:")
                     Log.d("RutaViewModel", "==========================================")
@@ -64,7 +64,7 @@ class RutaViewModel : ViewModel() {
                     Log.d("RutaViewModel", "Mensaje: ${body.mensaje}")
                     Log.d("RutaViewModel", "Error: ${body.error}")
 
-                    // ========== PEDIDOS ==========
+                    // Pedidos
                     Log.d("RutaViewModel", "")
                     Log.d("RutaViewModel", "--- PEDIDOS (PRODUCTOS) ---")
                     Log.d("RutaViewModel", "Total pedidos: ${body.pedidos?.size ?: 0}")
@@ -99,7 +99,7 @@ class RutaViewModel : ViewModel() {
                         }
                     }
 
-                    // ========== INVENTARIO/CARGA ==========
+                    // Inventario/ carga
                     Log.d("RutaViewModel", "")
                     Log.d("RutaViewModel", "--- INVENTARIO/CARGA ---")
                     Log.d("RutaViewModel", "Total items carga: ${body.carga?.size ?: 0}")
@@ -128,7 +128,7 @@ class RutaViewModel : ViewModel() {
 
                     Log.d("RutaViewModel", "")
                     Log.d("RutaViewModel", "==========================================")
-                    // ========== FIN LOGS ==========
+                    //  Fin historial
 
                     if (body.error != null) {
                         Log.e("RutaViewModel", "Error del servidor: ${body.error}")
