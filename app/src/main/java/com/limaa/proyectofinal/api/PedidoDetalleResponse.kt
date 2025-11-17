@@ -1,6 +1,6 @@
 package com.limaa.proyectofinal
 
-import com.google.gson.annotations.SerializedName
+
 data class PedidoDetalleResponse(
     val ok: Boolean? = null,
     val mensaje: String? = null,

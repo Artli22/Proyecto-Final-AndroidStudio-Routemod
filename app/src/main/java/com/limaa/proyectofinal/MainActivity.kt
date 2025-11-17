@@ -14,6 +14,7 @@ import com.limaa.proyectofinal.NavigationRoutes.AppNavigation
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // arranca la app, inicializa ApiClient y carga la navegación Compose
         ApiClient.init(this)
         enableEdgeToEdge()
         setContent {

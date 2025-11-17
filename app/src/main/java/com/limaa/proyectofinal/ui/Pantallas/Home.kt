@@ -29,7 +29,7 @@ fun RouteModScreen(
     val context = LocalContext.current
     val rutaState by viewModel.rutaState.observeAsState()
 
-    // ✅ Cargar TODOS los datos de la API (solo si no hay datos)
+    //  Cargar TODOS los datos de la API (solo si no hay datos)
     LaunchedEffect(Unit) {
         if (rutaState == null) {
             viewModel.obtenerRutaDelDia(context)
@@ -40,7 +40,7 @@ fun RouteModScreen(
     val pedidos = rutaState?.getOrNull()?.pedidos ?: emptyList()
     val primerosTresPedidos = pedidos.take(3)
 
-    // ✅ Obtener los primeros 3 items de inventario (solo con cantidad positiva)
+    //  Obtener los primeros 3 items de inventario (solo con cantidad positiva)
     val itemsCarga = rutaState?.getOrNull()?.carga ?: emptyList()
     val itemsPositivos = itemsCarga.filter { item ->
         (item.cantidadCarga?.toDoubleOrNull() ?: 0.0) > 0
@@ -57,7 +57,7 @@ fun RouteModScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // ✅ Header con botón de cerrar sesión en la esquina
+            // Header con botón de cerrar sesión en la esquina
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,7 +76,7 @@ fun RouteModScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                // ✅ Botón de cerrar sesión (reemplaza el ícono de usuario)
+                // Botón de cerrar sesión (reemplaza el ícono de usuario)
                 Button(
                     onClick = onCerrarSesion,
                     colors = ButtonDefaults.buttonColors(
