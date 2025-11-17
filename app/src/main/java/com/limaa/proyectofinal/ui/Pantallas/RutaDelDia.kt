@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.limaa.proyectofinal.Pedido
 import com.limaa.proyectofinal.RutaViewModel
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
 import android.content.Intent
 import android.net.Uri
 import android.content.Context
@@ -51,8 +52,6 @@ fun RoutaPantalla(
     val context = LocalContext.current
     val rutaState by viewModel.rutaState.observeAsState()
     val isLoading by viewModel.isLoading.observeAsState(false)
-
-    // Estado para forzar recomposición
     var resetKey by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
@@ -82,23 +81,16 @@ fun RoutaPantalla(
                     }
                 },
                 actions = {
-                    // Botón de resetear SOLO estados de pedidos
                     IconButton(
                         onClick = {
                             val sharedPrefs = context.getSharedPreferences("pedidos_estado", Context.MODE_PRIVATE)
                             val editor = sharedPrefs.edit()
-
-                            // Obtener todos los pedidos
                             val pedidos = rutaState?.getOrNull()?.pedidos ?: emptyList()
 
-                            // Solo eliminar los estados (números), mantener coordenadas y timestamps
                             pedidos.forEach { pedido ->
                                 editor.remove(pedido.id ?: "")
                             }
-
                             editor.apply()
-
-                            // Forzar recomposición
                             resetKey++
 
                             Toast.makeText(context, "Estados de pedidos reiniciados", Toast.LENGTH_SHORT).show()
@@ -288,6 +280,25 @@ fun RoutaPantalla(
                                                 }
                                             }
                                         }
+                                    },
+                                    onCall = {
+                                        pedido.telefono?.let { telefono ->
+                                            if (telefono.isNotBlank()) {
+                                                val intent = Intent(
+                                                    Intent.ACTION_DIAL,
+                                                    Uri.parse("tel:$telefono")
+                                                )
+                                                try {
+                                                    context.startActivity(intent)
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "No se pudo abrir la app de llamadas",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
+                                        }
                                     }
                                 )
                             }
@@ -303,18 +314,17 @@ fun RoutaPantalla(
     }
 }
 
-// Reemplaza DeliveryStopCard con esta versión:
 @Composable
 fun DeliveryStopCard(
     pedido: Pedido,
     resetTrigger: Int = 0,
     onViewOrder: () -> Unit = {},
-    onOpenMaps: () -> Unit = {}
+    onOpenMaps: () -> Unit = {},
+    onCall: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val sharedPrefs = context.getSharedPreferences("pedidos_estado", Context.MODE_PRIVATE)
 
-    // El estado se actualiza cuando resetTrigger cambia
     val estadoPedido = remember(resetTrigger) {
         mutableStateOf(sharedPrefs.getInt(pedido.id ?: "", 0))
     }
@@ -344,15 +354,16 @@ fun DeliveryStopCard(
     val tieneCoordenadasValidas = !pedido.coordenadas.isNullOrBlank() &&
             pedido.coordenadas != "null"
 
+    val tieneTelefonoValido = !pedido.telefono.isNullOrBlank()
+
     fun marcarEstadoConCoordenadas(nuevoEstado: Int) {
-        if (nuevoEstado == 1) { // Marcar llegada
+        if (nuevoEstado == 1) {
             if (android.Manifest.permission.ACCESS_FINE_LOCATION.let { perm ->
                     androidx.core.content.ContextCompat.checkSelfPermission(context, perm)
                 } == android.content.pm.PackageManager.PERMISSION_GRANTED) {
 
                 Toast.makeText(context, "Obteniendo ubicación...", Toast.LENGTH_SHORT).show()
 
-                // Primero intentar con última ubicación conocida
                 fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                     if (location != null) {
                         val coordenadas = "${location.latitude},${location.longitude}"
@@ -367,7 +378,6 @@ fun DeliveryStopCard(
                         enviarCoordenadasAAPI(context, pedido.id ?: "", coordenadas, "llegada")
                         Toast.makeText(context, "✓ Llegada registrada", Toast.LENGTH_SHORT).show()
                     } else {
-                        // Si no hay última ubicación, solicitar ubicación actual
                         val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
                             com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
                             10000
@@ -400,7 +410,6 @@ fun DeliveryStopCard(
                                 android.os.Looper.getMainLooper()
                             )
 
-                            // Timeout después de 15 segundos
                             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                 fusedLocationClient.removeLocationUpdates(locationCallback)
                                 if (estadoPedido.value != nuevoEstado) {
@@ -417,7 +426,7 @@ fun DeliveryStopCard(
             } else {
                 Toast.makeText(context, "Permiso de ubicación requerido", Toast.LENGTH_SHORT).show()
             }
-        } else if (nuevoEstado == 2) { // Marcar salida
+        } else if (nuevoEstado == 2) {
             if (android.Manifest.permission.ACCESS_FINE_LOCATION.let { perm ->
                     androidx.core.content.ContextCompat.checkSelfPermission(context, perm)
                 } == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -438,7 +447,6 @@ fun DeliveryStopCard(
                         enviarCoordenadasAAPI(context, pedido.id ?: "", coordenadas, "salida")
                         Toast.makeText(context, "✓ Salida registrada", Toast.LENGTH_SHORT).show()
                     } else {
-                        // Solicitar ubicación actual
                         val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
                             com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
                             10000
@@ -483,7 +491,6 @@ fun DeliveryStopCard(
                     }
                 }
             } else {
-                // Sin permisos, solo cambiar estado
                 estadoPedido.value = nuevoEstado
                 sharedPrefs.edit().putInt(pedido.id ?: "", nuevoEstado).apply()
                 Toast.makeText(context, "Salida marcada sin ubicación", Toast.LENGTH_SHORT).show()
@@ -525,12 +532,18 @@ fun DeliveryStopCard(
                 ) {
                     pedido.telefono?.let { tel ->
                         if (tel.isNotBlank()) {
-                            Text(
-                                tel,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Colores.Naranja
-                            )
+                            TextButton(
+                                onClick = onCall,
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(
+                                    tel,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Colores.Naranja,
+                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
+                                )
+                            }
                         }
                     }
 
@@ -598,6 +611,20 @@ fun DeliveryStopCard(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    if (tieneTelefonoValido) {
+                        IconButton(
+                            onClick = onCall,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = "Llamar",
+                                tint = Color(0xFF4CAF50),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
                     if (tieneCoordenadasValidas) {
                         IconButton(
                             onClick = onOpenMaps,
@@ -622,7 +649,7 @@ fun DeliveryStopCard(
                         Icon(
                             imageVector = Icons.Default.CameraAlt,
                             contentDescription = "Tomar foto",
-                            tint = Color(0xFF4CAF50),
+                            tint = Color(0xFF2196F3),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -680,11 +707,12 @@ fun DeliveryStopCard(
         }
     }
 }
+
 fun enviarCoordenadasAAPI(
     context: Context,
     pedidoId: String,
     coordenadas: String,
-    tipo: String // "llegada" o "salida"
+    tipo: String
 ) {
     CoroutineScope(Dispatchers.IO).launch {
         try {
@@ -706,7 +734,7 @@ fun enviarCoordenadasAAPI(
                 timestamp = System.currentTimeMillis().toString()
             )
 
-            android.util.Log.d("GPS_TRACKING", "📍 Enviando coordenadas: $coordenadas para pedido $pedidoId ($tipo)")
+            android.util.Log.d("GPS_TRACKING", "Enviando coordenadas: $coordenadas para pedido $pedidoId ($tipo)")
 
             val response = api.registrarUbicacion(request)
 
@@ -716,21 +744,21 @@ fun enviarCoordenadasAAPI(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body?.ok == true) {
-                    android.util.Log.d("GPS_TRACKING", "✅ Coordenadas registradas exitosamente")
+                    android.util.Log.d("GPS_TRACKING", "Coordenadas registradas exitosamente")
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, "✓ Ubicación registrada en servidor", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    android.util.Log.e("GPS_TRACKING", "❌ Error del servidor: ${body?.error}")
+                    android.util.Log.e("GPS_TRACKING", "Error del servidor: ${body?.error}")
                 }
             } else {
-                android.util.Log.e("GPS_TRACKING", "❌ HTTP Error: ${response.code()}")
+                android.util.Log.e("GPS_TRACKING", "HTTP Error: ${response.code()}")
             }
 
         } catch (e: com.google.gson.JsonSyntaxException) {
-            android.util.Log.e("GPS_TRACKING", "❌ JSON malformado del servidor", e)
+            android.util.Log.e("GPS_TRACKING", "JSON malformado del servidor", e)
         } catch (e: Exception) {
-            android.util.Log.e("GPS_TRACKING", "❌ Error: ${e.message}", e)
+            android.util.Log.e("GPS_TRACKING", "Error: ${e.message}", e)
         }
     }
 }
