@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.limaa.proyectofinal.PedidoDetalleViewModel
 import com.limaa.proyectofinal.DetallePedido
+import com.limaa.proyectofinal.Pedido
 
 object ColoresDetalle {
     val naranja = Color(0xFFFF7A3D)
@@ -42,12 +43,15 @@ fun PantallaDetallePedido(
     val detalleState by detalleViewModel.detalleState.observeAsState()
     val isLoading by detalleViewModel.isLoading.observeAsState(false)
 
-    // Cargar detalle al iniciar
+    // Obtener información del pedido desde la ruta
+    val rutaViewModel: com.limaa.proyectofinal.RutaViewModel = viewModel()
+    val rutaState by rutaViewModel.rutaState.observeAsState()
+    val pedidoInfo = rutaState?.getOrNull()?.pedidos?.find { it.id == pedidoId }
+
     LaunchedEffect(pedidoId) {
         detalleViewModel.obtenerDetallePedido(context, pedidoId)
     }
 
-    // Observar cambios en el estado
     LaunchedEffect(detalleState) {
         detalleState?.let { result ->
             result.onFailure { error ->
@@ -112,7 +116,7 @@ fun PantallaDetallePedido(
                 detalleState?.getOrNull()?.let { response ->
                     if (response.detalle != null && response.detalle.isNotEmpty()) {
                         ContenidoDetalle(
-                            pedidoId = pedidoId,
+                            pedidoInfo = pedidoInfo,
                             items = response.detalle
                         )
                     } else {
@@ -128,81 +132,52 @@ fun PantallaDetallePedido(
 
 @Composable
 fun ContenidoDetalle(
-    pedidoId: String,
+    pedidoInfo: Pedido?,
     items: List<DetallePedido>
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize()
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
-        // Header con info del pedido
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = ColoresDetalle.fondoTarjeta
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    "PEDIDO #$pedidoId",
-                    color = ColoresDetalle.naranja,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "${items.size} artículos en este pedido",
-                    fontSize = 12.sp,
-                    color = ColoresDetalle.grisClaro
-                )
-            }
-        }
 
         // Lista agrupada por parte
         val itemsAgrupados = items.groupBy { it.parte ?: "Sin categoría" }
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            itemsAgrupados.forEach { (parte, itemsDeLaParte) ->
-                // Header de la parte
-                item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = ColoresDetalle.naranja.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            parte.uppercase(),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = ColoresDetalle.fondoOscuro,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                            letterSpacing = 0.8.sp
-                        )
-                    }
-                }
-
-                // Items de esta parte
-                items(itemsDeLaParte) { item ->
-                    TarjetaDetalleItem(item)
+        itemsAgrupados.forEach { (parte, itemsDeLaParte) ->
+            // Header de la parte
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = ColoresDetalle.naranja.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        parte.uppercase(),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = ColoresDetalle.fondoOscuro,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        letterSpacing = 0.8.sp
+                    )
                 }
             }
-        }
 
-        // Footer con total
-        FooterTotal(items = items)
+            // Items de esta parte
+            items(itemsDeLaParte) { item ->
+                TarjetaDetalleItem(item)
+            }
+        }
     }
 }
 
 @Composable
 fun TarjetaDetalleItem(item: DetallePedido) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         colors = CardDefaults.cardColors(
             containerColor = ColoresDetalle.blanco
         ),
@@ -212,81 +187,37 @@ fun TarjetaDetalleItem(item: DetallePedido) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Nombre del artículo
             Text(
                 item.nombre ?: "Sin nombre",
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = ColoresDetalle.fondoOscuro
             )
 
-            // Código del artículo
-            if (item.articulo != null) {
+            // Cantidad
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Text(
-                    "Código: ${item.articulo}",
+                    "Cantidad:",
                     fontSize = 12.sp,
                     color = ColoresDetalle.grisClaro
                 )
-            }
-
-            Divider(
-                modifier = Modifier.padding(vertical = 4.dp),
-                color = ColoresDetalle.grisClaro.copy(alpha = 0.3f)
-            )
-
-            // Detalles numéricos
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        "Cantidad",
-                        fontSize = 11.sp,
-                        color = ColoresDetalle.grisClaro
-                    )
-                    Text(
-                        item.cantidad ?: "0",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ColoresDetalle.naranja
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        "Precio Unit.",
-                        fontSize = 11.sp,
-                        color = ColoresDetalle.grisClaro
-                    )
-                    Text(
-                        "Q ${item.precio ?: "0.00"}",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        "Subtotal",
-                        fontSize = 11.sp,
-                        color = ColoresDetalle.grisClaro
-                    )
-                    Text(
-                        "Q ${item.subtotal ?: "0.00"}",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ColoresDetalle.fondoOscuro
-                    )
-                }
+                Text(
+                    item.cantidad?.toDoubleOrNull()?.toInt()?.toString() ?: "0",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ColoresDetalle.naranja
+                )
             }
 
             // Extras si existen
             if (!item.extras.isNullOrBlank() && item.extras != "0") {
-                Spacer(modifier = Modifier.height(4.dp))
                 Surface(
                     color = ColoresDetalle.fondoTarjeta,
                     shape = RoundedCornerShape(6.dp)
@@ -298,46 +229,6 @@ fun TarjetaDetalleItem(item: DetallePedido) {
                         modifier = Modifier.padding(8.dp)
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun FooterTotal(items: List<DetallePedido>) {
-    val total = items.sumOf {
-        it.subtotal?.toDoubleOrNull() ?: 0.0
-    }
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = ColoresDetalle.blanco,
-        shadowElevation = 8.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "TOTAL DEL PEDIDO",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ColoresDetalle.fondoOscuro,
-                    letterSpacing = 0.5.sp
-                )
-
-                Text(
-                    "Q ${String.format("%.2f", total)}",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ColoresDetalle.naranja
-                )
             }
         }
     }

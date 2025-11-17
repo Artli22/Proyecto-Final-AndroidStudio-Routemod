@@ -28,6 +28,11 @@ import androidx.compose.material.icons.filled.CameraAlt
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.material.icons.filled.Refresh
 
 // Creado por: Ivan Morataya
 
@@ -46,6 +51,9 @@ fun RoutaPantalla(
     val context = LocalContext.current
     val rutaState by viewModel.rutaState.observeAsState()
     val isLoading by viewModel.isLoading.observeAsState(false)
+
+    // Estado para forzar recomposición
+    var resetKey by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
         if (rutaState == null) {
@@ -70,6 +78,36 @@ fun RoutaPantalla(
                             Icons.Default.ArrowBack,
                             contentDescription = "Volver",
                             tint = Color.Black
+                        )
+                    }
+                },
+                actions = {
+                    // Botón de resetear SOLO estados de pedidos
+                    IconButton(
+                        onClick = {
+                            val sharedPrefs = context.getSharedPreferences("pedidos_estado", Context.MODE_PRIVATE)
+                            val editor = sharedPrefs.edit()
+
+                            // Obtener todos los pedidos
+                            val pedidos = rutaState?.getOrNull()?.pedidos ?: emptyList()
+
+                            // Solo eliminar los estados (números), mantener coordenadas y timestamps
+                            pedidos.forEach { pedido ->
+                                editor.remove(pedido.id ?: "")
+                            }
+
+                            editor.apply()
+
+                            // Forzar recomposición
+                            resetKey++
+
+                            Toast.makeText(context, "Estados de pedidos reiniciados", Toast.LENGTH_SHORT).show()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Reiniciar estados",
+                            tint = Colores.Naranja
                         )
                     }
                 },
@@ -222,9 +260,13 @@ fun RoutaPantalla(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(pedidos) { pedido ->
+                            items(
+                                items = pedidos,
+                                key = { "${it.id}_$resetKey" }
+                            ) { pedido ->
                                 DeliveryStopCard(
                                     pedido = pedido,
+                                    resetTrigger = resetKey,
                                     onViewOrder = { onViewOrder(pedido.id ?: "") },
                                     onOpenMaps = {
                                         pedido.coordenadas?.let { coords ->
@@ -261,17 +303,25 @@ fun RoutaPantalla(
     }
 }
 
-
+// Reemplaza DeliveryStopCard con esta versión:
 @Composable
 fun DeliveryStopCard(
     pedido: Pedido,
+    resetTrigger: Int = 0,
     onViewOrder: () -> Unit = {},
     onOpenMaps: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val sharedPrefs = context.getSharedPreferences("pedidos_estado", Context.MODE_PRIVATE)
 
-    val estadoPedido = remember { mutableStateOf(sharedPrefs.getInt(pedido.id ?: "", 0)) }
+    // El estado se actualiza cuando resetTrigger cambia
+    val estadoPedido = remember(resetTrigger) {
+        mutableStateOf(sharedPrefs.getInt(pedido.id ?: "", 0))
+    }
+
+    val fusedLocationClient = remember {
+        com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(context)
+    }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
@@ -293,6 +343,153 @@ fun DeliveryStopCard(
 
     val tieneCoordenadasValidas = !pedido.coordenadas.isNullOrBlank() &&
             pedido.coordenadas != "null"
+
+    fun marcarEstadoConCoordenadas(nuevoEstado: Int) {
+        if (nuevoEstado == 1) { // Marcar llegada
+            if (android.Manifest.permission.ACCESS_FINE_LOCATION.let { perm ->
+                    androidx.core.content.ContextCompat.checkSelfPermission(context, perm)
+                } == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+
+                Toast.makeText(context, "Obteniendo ubicación...", Toast.LENGTH_SHORT).show()
+
+                // Primero intentar con última ubicación conocida
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        val coordenadas = "${location.latitude},${location.longitude}"
+
+                        sharedPrefs.edit()
+                            .putInt(pedido.id ?: "", nuevoEstado)
+                            .putString("${pedido.id}_coords", coordenadas)
+                            .putLong("${pedido.id}_timestamp", System.currentTimeMillis())
+                            .apply()
+
+                        estadoPedido.value = nuevoEstado
+                        enviarCoordenadasAAPI(context, pedido.id ?: "", coordenadas, "llegada")
+                        Toast.makeText(context, "✓ Llegada registrada", Toast.LENGTH_SHORT).show()
+                    } else {
+                        // Si no hay última ubicación, solicitar ubicación actual
+                        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+                            com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                            10000
+                        ).build()
+
+                        val locationCallback = object : com.google.android.gms.location.LocationCallback() {
+                            override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+                                locationResult.lastLocation?.let { newLocation ->
+                                    val coordenadas = "${newLocation.latitude},${newLocation.longitude}"
+
+                                    sharedPrefs.edit()
+                                        .putInt(pedido.id ?: "", nuevoEstado)
+                                        .putString("${pedido.id}_coords", coordenadas)
+                                        .putLong("${pedido.id}_timestamp", System.currentTimeMillis())
+                                        .apply()
+
+                                    estadoPedido.value = nuevoEstado
+                                    enviarCoordenadasAAPI(context, pedido.id ?: "", coordenadas, "llegada")
+                                    Toast.makeText(context, "✓ Llegada registrada", Toast.LENGTH_SHORT).show()
+
+                                    fusedLocationClient.removeLocationUpdates(this)
+                                }
+                            }
+                        }
+
+                        try {
+                            fusedLocationClient.requestLocationUpdates(
+                                locationRequest,
+                                locationCallback,
+                                android.os.Looper.getMainLooper()
+                            )
+
+                            // Timeout después de 15 segundos
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                fusedLocationClient.removeLocationUpdates(locationCallback)
+                                if (estadoPedido.value != nuevoEstado) {
+                                    Toast.makeText(context, "No se pudo obtener ubicación", Toast.LENGTH_LONG).show()
+                                }
+                            }, 15000)
+                        } catch (e: SecurityException) {
+                            Toast.makeText(context, "Error de permisos", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }.addOnFailureListener {
+                    Toast.makeText(context, "Error al obtener ubicación", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, "Permiso de ubicación requerido", Toast.LENGTH_SHORT).show()
+            }
+        } else if (nuevoEstado == 2) { // Marcar salida
+            if (android.Manifest.permission.ACCESS_FINE_LOCATION.let { perm ->
+                    androidx.core.content.ContextCompat.checkSelfPermission(context, perm)
+                } == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+
+                Toast.makeText(context, "Obteniendo ubicación...", Toast.LENGTH_SHORT).show()
+
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        val coordenadas = "${location.latitude},${location.longitude}"
+
+                        sharedPrefs.edit()
+                            .putInt(pedido.id ?: "", nuevoEstado)
+                            .putString("${pedido.id}_coords_salida", coordenadas)
+                            .putLong("${pedido.id}_timestamp_salida", System.currentTimeMillis())
+                            .apply()
+
+                        estadoPedido.value = nuevoEstado
+                        enviarCoordenadasAAPI(context, pedido.id ?: "", coordenadas, "salida")
+                        Toast.makeText(context, "✓ Salida registrada", Toast.LENGTH_SHORT).show()
+                    } else {
+                        // Solicitar ubicación actual
+                        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+                            com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                            10000
+                        ).build()
+
+                        val locationCallback = object : com.google.android.gms.location.LocationCallback() {
+                            override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+                                locationResult.lastLocation?.let { newLocation ->
+                                    val coordenadas = "${newLocation.latitude},${newLocation.longitude}"
+
+                                    sharedPrefs.edit()
+                                        .putInt(pedido.id ?: "", nuevoEstado)
+                                        .putString("${pedido.id}_coords_salida", coordenadas)
+                                        .putLong("${pedido.id}_timestamp_salida", System.currentTimeMillis())
+                                        .apply()
+
+                                    estadoPedido.value = nuevoEstado
+                                    enviarCoordenadasAAPI(context, pedido.id ?: "", coordenadas, "salida")
+                                    Toast.makeText(context, "✓ Salida registrada", Toast.LENGTH_SHORT).show()
+
+                                    fusedLocationClient.removeLocationUpdates(this)
+                                }
+                            }
+                        }
+
+                        try {
+                            fusedLocationClient.requestLocationUpdates(
+                                locationRequest,
+                                locationCallback,
+                                android.os.Looper.getMainLooper()
+                            )
+
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                fusedLocationClient.removeLocationUpdates(locationCallback)
+                                if (estadoPedido.value != nuevoEstado) {
+                                    Toast.makeText(context, "No se pudo obtener ubicación", Toast.LENGTH_LONG).show()
+                                }
+                            }, 15000)
+                        } catch (e: SecurityException) {
+                            Toast.makeText(context, "Error de permisos", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } else {
+                // Sin permisos, solo cambiar estado
+                estadoPedido.value = nuevoEstado
+                sharedPrefs.edit().putInt(pedido.id ?: "", nuevoEstado).apply()
+                Toast.makeText(context, "Salida marcada sin ubicación", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -443,8 +640,7 @@ fun DeliveryStopCard(
                             1 -> 2
                             else -> 2
                         }
-                        estadoPedido.value = nuevoEstado
-                        sharedPrefs.edit().putInt(pedido.id ?: "", nuevoEstado).apply()
+                        marcarEstadoConCoordenadas(nuevoEstado)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = when (estadoPedido.value) {
@@ -481,6 +677,60 @@ fun DeliveryStopCard(
                     Text("Ver detalles", fontSize = 12.sp)
                 }
             }
+        }
+    }
+}
+fun enviarCoordenadasAAPI(
+    context: Context,
+    pedidoId: String,
+    coordenadas: String,
+    tipo: String // "llegada" o "salida"
+) {
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val token = com.limaa.proyectofinal.TokenManager.getToken(context)
+
+            if (token == null) {
+                android.util.Log.e("GPS_TRACKING", "No hay token disponible")
+                return@launch
+            }
+
+            val api = com.limaa.proyectofinal.ApiClient.retrofit.create(com.limaa.proyectofinal.ApiService::class.java)
+
+            val request = com.limaa.proyectofinal.RegistrarUbicacionRequest(
+                accion = "coordenadas",
+                token = token,
+                pedido = pedidoId,
+                coordenadas = coordenadas,
+                tipo = tipo,
+                timestamp = System.currentTimeMillis().toString()
+            )
+
+            android.util.Log.d("GPS_TRACKING", "📍 Enviando coordenadas: $coordenadas para pedido $pedidoId ($tipo)")
+
+            val response = api.registrarUbicacion(request)
+
+            android.util.Log.d("GPS_TRACKING", "Response code: ${response.code()}")
+            android.util.Log.d("GPS_TRACKING", "Response body: ${response.body()}")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body?.ok == true) {
+                    android.util.Log.d("GPS_TRACKING", "✅ Coordenadas registradas exitosamente")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "✓ Ubicación registrada en servidor", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    android.util.Log.e("GPS_TRACKING", "❌ Error del servidor: ${body?.error}")
+                }
+            } else {
+                android.util.Log.e("GPS_TRACKING", "❌ HTTP Error: ${response.code()}")
+            }
+
+        } catch (e: com.google.gson.JsonSyntaxException) {
+            android.util.Log.e("GPS_TRACKING", "❌ JSON malformado del servidor", e)
+        } catch (e: Exception) {
+            android.util.Log.e("GPS_TRACKING", "❌ Error: ${e.message}", e)
         }
     }
 }

@@ -75,4 +75,6 @@ dependencies {
     implementation("androidx.compose.runtime:runtime-livedata:1.5.4")
 
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 }
