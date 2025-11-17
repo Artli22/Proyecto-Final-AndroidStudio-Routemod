@@ -35,8 +35,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.filled.Refresh
 
-// Creado por: Ivan Morataya
-
 object Colores {
     val Naranja = Color(0xFFFF7A3D)
     val Naranja2 = Color(0xFFFFEBE5)

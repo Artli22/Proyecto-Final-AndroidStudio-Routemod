@@ -26,8 +26,6 @@ import kotlinx.coroutines.delay
 import kotlin.math.cos
 import kotlin.math.sin
 
-// Creado por: Jorge Villeda
-
 object ColoresDelivery {
     val azulClaro = Color(0xFFE8F4F8)
     val melocoton = Color(0xFFFFF5F0)

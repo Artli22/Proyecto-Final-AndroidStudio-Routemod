@@ -23,7 +23,6 @@ data class PedidoDetalleRequest(
     val pedido: String
 )
 
-// NUEVO: Request para registrar ubicación
 data class RegistrarUbicacionRequest(
     val accion: String = "coordenadas",
     val token: String,

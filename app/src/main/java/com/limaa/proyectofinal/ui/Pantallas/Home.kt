@@ -24,8 +24,6 @@ import androidx.compose.ui.layout.ContentScale
 import com.limaa.proyectofinal.R
 import kotlinx.coroutines.delay
 
-// Creado por Arturo Lima
-
 @Composable
 fun RouteModScreen(
     onVerMasInventario: () -> Unit = {},

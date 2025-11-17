@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.limaa.proyectofinal.R
 import com.limaa.proyectofinal.Utils.rememberLocationPermissionLauncher
 
-// Creado por: Arturo Lima
 object UbicacionColors {
     val Naranja = Color(0xFFFF7A3D)
     val GrisClaro = Color(0xFF9FA8B2)

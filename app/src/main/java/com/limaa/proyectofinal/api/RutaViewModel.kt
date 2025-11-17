@@ -99,7 +99,7 @@ class RutaViewModel : ViewModel() {
                         }
                     }
 
-                    // Inventario/ carga
+                    // carga
                     Log.d("RutaViewModel", "")
                     Log.d("RutaViewModel", "--- INVENTARIO/CARGA ---")
                     Log.d("RutaViewModel", "Total items carga: ${body.carga?.size ?: 0}")
@@ -128,7 +128,6 @@ class RutaViewModel : ViewModel() {
 
                     Log.d("RutaViewModel", "")
                     Log.d("RutaViewModel", "==========================================")
-                    //  Fin historial
 
                     if (body.error != null) {
                         Log.e("RutaViewModel", "Error del servidor: ${body.error}")
