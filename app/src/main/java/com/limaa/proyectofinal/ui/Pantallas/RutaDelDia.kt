@@ -1,6 +1,7 @@
 package com.limaa.proyectofinal.ui.Pantallas
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -507,200 +508,233 @@ fun DeliveryStopCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(16.dp)
         ) {
+            // Encabezado: Nombre del cliente y estado
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Text(
-                    pedido.cliente ?: "Cliente desconocido",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.weight(1f)
-                )
-
                 Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    pedido.telefono?.let { tel ->
-                        if (tel.isNotBlank()) {
-                            TextButton(
-                                onClick = onCall,
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text(
-                                    tel,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Colores.Naranja,
-                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        pedido.cliente ?: "Cliente desconocido",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
 
-                    pedido.estado?.let { estado ->
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = estadoColor.copy(alpha = 0.2f)
+                    // Teléfono con icono a la izquierda
+                    if (tieneTelefonoValido) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier
+                                .clickable(onClick = onCall)
+                                .padding(vertical = 2.dp)
                         ) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = "Teléfono",
+                                tint = Color(0xFF4CAF50),
+                                modifier = Modifier.size(16.dp)
+                            )
                             Text(
-                                estado,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = estadoColor,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                pedido.telefono ?: "",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF4CAF50)
                             )
                         }
                     }
                 }
+
+                pedido.estado?.let { estado ->
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = estadoColor.copy(alpha = 0.2f)
+                    ) {
+                        Text(
+                            estado,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = estadoColor,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
             }
 
-            Row(
+            // Información de dirección y acceso
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    pedido.condominio?.let { condominio ->
-                        if (condominio.isNotBlank()) {
+                pedido.condominio?.let { condominio ->
+                    if (condominio.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Colores.Naranja.copy(alpha = 0.1f)
+                            ) {
+                                Text(
+                                    "Sector",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Colores.Naranja,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
                             Text(
-                                "Sector: $condominio",
+                                condominio,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black
                             )
                         }
                     }
+                }
 
-                    pedido.direccion?.let { direccion ->
-                        if (direccion.isNotBlank()) {
+                pedido.direccion?.let { direccion ->
+                    if (direccion.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(14.dp).padding(top = 2.dp)
+                            )
                             Text(
-                                "Dir: $direccion",
+                                direccion,
                                 fontSize = 11.sp,
                                 color = Color.Gray,
-                                maxLines = 2
-                            )
-                        }
-                    }
-
-                    pedido.informacionAcceso?.let { info ->
-                        if (info.isNotBlank()) {
-                            Text(
-                                "Acceso: $info",
-                                fontSize = 11.sp,
-                                color = Color.Gray
+                                maxLines = 2,
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    if (tieneTelefonoValido) {
-                        IconButton(
-                            onClick = onCall,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Phone,
-                                contentDescription = "Llamar",
-                                tint = Color(0xFF4CAF50),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-
-                    if (tieneCoordenadasValidas) {
-                        IconButton(
-                            onClick = onOpenMaps,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Abrir en Maps",
-                                tint = Colores.Naranja,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    }
-
-                    IconButton(
-                        onClick = {
-                            val uri = Uri.parse("content://temp")
-                            cameraLauncher.launch(uri)
-                        },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Tomar foto",
-                            tint = Color(0xFF2196F3),
-                            modifier = Modifier.size(24.dp)
+                pedido.informacionAcceso?.let { info ->
+                    if (info.isNotBlank()) {
+                        Text(
+                            "ℹ️ $info",
+                            fontSize = 11.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(start = 2.dp)
                         )
                     }
                 }
             }
 
+            // Íconos de acción y botones
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = {
-                        val nuevoEstado = when (estadoPedido.value) {
-                            0 -> 1
-                            1 -> 2
-                            else -> 2
-                        }
-                        marcarEstadoConCoordenadas(nuevoEstado)
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = when (estadoPedido.value) {
-                            0 -> Colores.Naranja
-                            1 -> Color(0xFF4CAF50)
-                            else -> Color.LightGray
-                        }
-                    ),
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    enabled = estadoPedido.value != 2,
-                    contentPadding = PaddingValues(vertical = 10.dp)
+                // Íconos de acción rápida
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        when (estadoPedido.value) {
-                            0 -> "Marcar llegada"
-                            1 -> "Marcar salida"
-                            else -> "Finalizado"
+                    if (tieneCoordenadasValidas) {
+                        FilledIconButton(
+                            onClick = onOpenMaps,
+                            modifier = Modifier.size(40.dp),
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = Colores.Naranja.copy(alpha = 0.1f)
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Abrir Maps",
+                                tint = Colores.Naranja,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    FilledIconButton(
+                        onClick = {
+                            val uri = Uri.parse("content://temp")
+                            cameraLauncher.launch(uri)
                         },
-                        fontSize = 12.sp
-                    )
+                        modifier = Modifier.size(40.dp),
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = Color(0xFF2196F3).copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Tomar foto",
+                            tint = Color(0xFF2196F3),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
 
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Botón de ver detalles
                 OutlinedButton(
                     onClick = onViewOrder,
-                    modifier = Modifier.weight(0.8f),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Colores.Naranja
                     ),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Colores.Naranja),
-                    contentPadding = PaddingValues(vertical = 10.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text("Ver detalles", fontSize = 12.sp)
                 }
+            }
+
+            // Botón de estado (llegada/salida)
+            Button(
+                onClick = {
+                    val nuevoEstado = when (estadoPedido.value) {
+                        0 -> 1
+                        1 -> 2
+                        else -> 2
+                    }
+                    marcarEstadoConCoordenadas(nuevoEstado)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = when (estadoPedido.value) {
+                        0 -> Colores.Naranja
+                        1 -> Color(0xFF4CAF50)
+                        else -> Color.LightGray
+                    }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                shape = RoundedCornerShape(8.dp),
+                enabled = estadoPedido.value != 2,
+                contentPadding = PaddingValues(vertical = 12.dp)
+            ) {
+                Text(
+                    when (estadoPedido.value) {
+                        0 -> "Marcar llegada"
+                        1 -> "Marcar salida"
+                        else -> "Finalizado"
+                    },
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
